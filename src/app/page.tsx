@@ -11,8 +11,6 @@ export default function Home() {
   return (
     <main className="p-4">
       <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
-      <div className="text-red-500 font-bold p-4">This text should be red</div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {foodList.map((food) => {
           const isSelected = selectedItems.some((item) => item.id === food.id);
