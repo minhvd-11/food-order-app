@@ -6,10 +6,23 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
 export default function Home() {
-  const { selectedItems, toggleItem } = useCartStore();
+  const { guestName, setGuestName, selectedItems, toggleItem } = useCartStore();
 
   return (
     <main className="p-4">
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">
+          👤 Tên của bạn:
+        </label>
+        <input
+          type="text"
+          className="w-full p-2 border rounded-md"
+          value={guestName}
+          onChange={(e) => setGuestName(e.target.value)}
+          placeholder="Nhập tên để lưu đơn"
+        />
+      </div>
+
       <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {foodList.map((food) => {
@@ -31,6 +44,19 @@ export default function Home() {
           );
         })}
       </div>
+
+      {selectedItems.length > 0 && (
+        <div className="mt-8 p-4 border-t">
+          <h2 className="text-lg font-semibold mb-2">🛒 Món đã chọn:</h2>
+          <ul className="list-disc list-inside space-y-1">
+            {selectedItems.map((item) => (
+              <li key={item.id} className="text-gray-800">
+                {item.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </main>
   );
 }
