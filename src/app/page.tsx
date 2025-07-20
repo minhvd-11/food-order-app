@@ -6,10 +6,14 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
 export default function Home() {
-  const { guestName, setGuestName, selectedItems, toggleItem } = useCartStore();
+  const { guestName, setGuestName, selectedItems, toggleItem, submitOrder } =
+    useCartStore();
 
   return (
-    <main className="p-4">
+    <main className="p-4 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
+
+      {/* Guest Name Input */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">
           👤 Tên của bạn:
@@ -23,7 +27,7 @@ export default function Home() {
         />
       </div>
 
-      <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
+      {/* Food Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {foodList.map((food) => {
           const isSelected = selectedItems.some((item) => item.id === food.id);
@@ -45,16 +49,23 @@ export default function Home() {
         })}
       </div>
 
+      {/* Selected Summary & Submit */}
       {selectedItems.length > 0 && (
         <div className="mt-8 p-4 border-t">
           <h2 className="text-lg font-semibold mb-2">🛒 Món đã chọn:</h2>
-          <ul className="list-disc list-inside space-y-1">
+          <ul className="list-disc list-inside space-y-1 mb-4">
             {selectedItems.map((item) => (
               <li key={item.id} className="text-gray-800">
                 {item.name}
               </li>
             ))}
           </ul>
+          <button
+            onClick={submitOrder}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            ✅ Lưu đơn
+          </button>
         </div>
       )}
     </main>
