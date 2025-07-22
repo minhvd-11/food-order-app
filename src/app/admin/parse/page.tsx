@@ -43,6 +43,26 @@ export default function AdminParsePage() {
     }
   };
 
+  const handleSave = async () => {
+    const res = await fetch("/api/admin/foods", {
+      method: "POST",
+      body: JSON.stringify({
+        foods: result.map((item) => item.name),
+        // optionally include date: new Date().toISOString()
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Lỗi khi lưu dữ liệu");
+    }
+
+    alert("Đã lưu danh sách món ăn cho ngày hôm nay");
+  };
+
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">📋 Phân tích danh sách món ăn</h1>
@@ -81,6 +101,7 @@ export default function AdminParsePage() {
               );
             })}
           </div>
+          <Button onClick={handleSave}>{"Lưu danh sách"}</Button>
         </>
       )}
     </main>
