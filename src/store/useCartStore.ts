@@ -26,7 +26,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ selectedItems: updated });
   },
 
-  submitOrder: () => {
+  submitOrder: async () => {
     const { guestName, selectedItems } = get();
 
     if (!guestName.trim()) {
@@ -39,18 +39,28 @@ export const useCartStore = create<CartStore>((set, get) => ({
       return;
     }
 
-    const order = {
-      guestName,
-      items: selectedItems,
-      time: new Date().toISOString(),
-    };
+    try {
+      const res = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: guestName,
+          foodIds: selectedItems.map((item) => item.id),
+        }),
+      });
 
-    const saved = JSON.parse(localStorage.getItem("orders") || "[]");
-    saved.push(order);
-    localStorage.setItem("orders", JSON.stringify(saved));
+      const data = await res.json();
 
-    alert("🧾 Đơn đã được lưu!");
+      if (!res.ok) {
+        throw new Error(data.message || "Lỗi khi gửi đơn");
+      }
 
-    set({ guestName: "", selectedItems: [] });
+      alert("🧾 Đã gửi đơn thành công!");
+
+      set({ guestName: "", selectedItems: [] });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      alert(error.message || "Gửi đơn thất bại!");
+    }
   },
 }));
