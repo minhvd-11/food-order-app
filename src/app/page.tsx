@@ -4,6 +4,7 @@ import { foodList } from "@/data/foods";
 import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function Home() {
   const { guestName, setGuestName, selectedItems, toggleItem, submitOrder } =
@@ -11,6 +12,10 @@ export default function Home() {
 
   return (
     <main className="p-4 max-w-3xl mx-auto">
+      <Link href="/admin" className="text-blue-600 underline">
+        Trang quản trị
+      </Link>
+
       <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
 
       {/* Guest Name Input */}

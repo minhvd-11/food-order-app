@@ -42,25 +42,27 @@ export const useCartStore = create<CartStore>((set, get) => ({
     try {
       const res = await fetch("/api/order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: guestName,
           foodIds: selectedItems.map((item) => item.id),
         }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.message || "Lỗi khi gửi đơn");
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Đặt đơn thất bại");
       }
 
-      alert("🧾 Đã gửi đơn thành công!");
+      alert("🧾 Đơn đã được gửi thành công!");
 
+      // Reset form
       set({ guestName: "", selectedItems: [] });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      alert(error.message || "Gửi đơn thất bại!");
+      alert("🚨 Lỗi: " + error.message);
     }
   },
 }));

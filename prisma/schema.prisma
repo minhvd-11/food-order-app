@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -15,10 +9,9 @@ datasource db {
 }
 
 model Food {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-
+  id         String      @id @default(cuid())
+  name       String      @unique
+  createdAt  DateTime    @default(now())
   dayFoods   DayFood[]
   orderItems OrderItem[]
 }
@@ -26,32 +19,30 @@ model Food {
 model DayFood {
   id     String   @id @default(cuid())
   date   DateTime
-  food   Food     @relation(fields: [foodId], references: [id])
   foodId String
+  food   Food     @relation(fields: [foodId], references: [id])
 }
 
 model User {
   id        String   @id @default(cuid())
   name      String
   createdAt DateTime @default(now())
-
-  orders Order[]
+  orders    Order[]
 }
 
 model Order {
   id        String      @id @default(cuid())
-  user      User        @relation(fields: [userId], references: [id])
   userId    String
   createdAt DateTime    @default(now())
   date      DateTime
+  user      User        @relation(fields: [userId], references: [id])
   items     OrderItem[]
 }
 
 model OrderItem {
   id      String @id @default(cuid())
-  order   Order  @relation(fields: [orderId], references: [id])
   orderId String
-
-  food   Food   @relation(fields: [foodId], references: [id])
-  foodId String
+  foodId  String
+  food    Food   @relation(fields: [foodId], references: [id])
+  order   Order  @relation(fields: [orderId], references: [id])
 }
