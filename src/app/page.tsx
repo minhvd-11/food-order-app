@@ -1,18 +1,41 @@
 "use client";
 
-import { foodList } from "@/data/foods";
 import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ParsedFood } from "@/types";
 
 export default function Home() {
   const { guestName, setGuestName, selectedItems, toggleItem, submitOrder } =
     useCartStore();
 
+  const [foods, setFoods] = useState<ParsedFood[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFoods = async () => {
+      try {
+        const res = await fetch("/api/foods/today");
+        const data = await res.json();
+        if (!res.ok)
+          throw new Error(data.error || "Lỗi khi tải danh sách món ăn");
+        setFoods(data);
+      } catch (err) {
+        console.error(err);
+        setFoods([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFoods();
+  }, []);
+
   return (
     <main className="p-4 max-w-3xl mx-auto">
-      <Link href="/admin" className="text-blue-600 underline">
+      <Link href="/admin/orders" className="text-blue-600 underline">
         Trang quản trị
       </Link>
 
@@ -33,26 +56,34 @@ export default function Home() {
       </div>
 
       {/* Food Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {foodList.map((food) => {
-          const isSelected = selectedItems.some((item) => item.id === food.id);
+      {loading ? (
+        <p>⏳ Đang tải danh sách món ăn...</p>
+      ) : !foods?.length ? (
+        <p>❌ Không có món ăn nào cho hôm nay.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {foods?.map((food) => {
+            const isSelected = selectedItems.some(
+              (item) => item.id === food.id
+            );
 
-          return (
-            <Card
-              key={food.id}
-              onClick={() => toggleItem(food)}
-              className={cn(
-                "cursor-pointer border p-4 rounded-xl shadow-sm transition-all duration-150 hover:shadow-md active:scale-[0.98]",
-                isSelected
-                  ? "border-green-500 bg-green-100 text-green-900"
-                  : "border-gray-200 hover:border-gray-400"
-              )}
-            >
-              <p className="text-base font-medium">{food.name}</p>
-            </Card>
-          );
-        })}
-      </div>
+            return (
+              <Card
+                key={food.id}
+                onClick={() => toggleItem(food)}
+                className={cn(
+                  "cursor-pointer border p-4 rounded-xl shadow-sm transition-all duration-150 hover:shadow-md active:scale-[0.98]",
+                  isSelected
+                    ? "border-green-500 bg-green-100 text-green-900"
+                    : "border-gray-200 hover:border-gray-400"
+                )}
+              >
+                <p className="text-base font-medium">{food.name}</p>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Selected Summary & Submit */}
       {selectedItems.length > 0 && (

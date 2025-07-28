@@ -8,16 +8,8 @@ export async function POST(req: Request) {
     const { foods, date } = body as { foods: string[]; date?: string };
 
     const parsedDate = date ? new Date(date) : new Date();
-    const isoDate = parsedDate.toISOString().split("T")[0]; // yyyy-mm-dd
+    const dateOnly = new Date(parsedDate.toISOString().split("T")[0]);
 
-    // Upsert DayFood
-    const day = await prisma.day.upsert({
-      where: { date: isoDate },
-      update: {},
-      create: { date: isoDate },
-    });
-
-    // For each food name, connect or create, then link to Day
     const foodRecords = await Promise.all(
       foods.map(async (name) => {
         const food = await prisma.food.upsert({
@@ -26,16 +18,17 @@ export async function POST(req: Request) {
           create: { name },
         });
 
+        // Upsert DayFood based on (date, foodId)
         await prisma.dayFood.upsert({
           where: {
-            dayId_foodId: {
-              dayId: day.id,
+            date_foodId: {
+              date: dateOnly,
               foodId: food.id,
             },
           },
           update: {},
           create: {
-            dayId: day.id,
+            date: dateOnly,
             foodId: food.id,
           },
         });
@@ -46,7 +39,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, foods: foodRecords });
   } catch (err) {
-    console.error(err);
+    console.error("POST /admin/foods error", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

@@ -1,23 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Textarea, Card, Button } from "@/components/ui";
 import { toast } from "sonner";
-import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
-
-type ParsedFood = {
-  id: string;
-  name: string;
-};
+import { ParsedFood } from "@/types";
 
 export default function AdminParsePage() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ParsedFood[]>([]);
-  const { selectedItems, toggleItem } = useCartStore();
 
   const handleParse = async () => {
     setLoading(true);
@@ -31,10 +23,16 @@ export default function AdminParsePage() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || "Lỗi khi phân tích danh sách");
 
-      setResult(data.foods);
+      const foodsWithId: ParsedFood[] = data.foods.map(
+        (food: { name: string }, index: number) => ({
+          id: index,
+          name: food.name,
+        })
+      );
+
+      setResult(foodsWithId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || "Đã có lỗi xảy ra");
@@ -48,7 +46,7 @@ export default function AdminParsePage() {
       method: "POST",
       body: JSON.stringify({
         foods: result.map((item) => item.name),
-        // optionally include date: new Date().toISOString()
+        date: new Date().toISOString(),
       }),
       headers: {
         "Content-Type": "application/json",
@@ -82,25 +80,18 @@ export default function AdminParsePage() {
         <>
           <h2 className="text-xl font-semibold">Kết quả:</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {result.map((food) => {
-              const isSelected = selectedItems.some((i) => i.id === food.id);
-
-              return (
-                <Card
-                  key={food.id}
-                  onClick={() => toggleItem(food)}
-                  className={cn(
-                    "cursor-pointer border p-4 rounded-xl transition-all",
-                    isSelected
-                      ? "border-green-500 bg-green-100 text-green-900"
-                      : "border-gray-200 hover:border-gray-400"
-                  )}
-                >
-                  <p className="text-base font-medium">{food.name}</p>
-                </Card>
-              );
-            })}
+            {result.map((food) => (
+              <Card
+                key={food.id}
+                className={cn(
+                  "border p-4 rounded-xl transition-all border-gray-200 hover:border-gray-400"
+                )}
+              >
+                <p className="text-base font-medium">{food.name}</p>
+              </Card>
+            ))}
           </div>
+
           <Button onClick={handleSave}>{"Lưu danh sách"}</Button>
         </>
       )}
