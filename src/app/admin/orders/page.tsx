@@ -4,31 +4,88 @@ import { useEffect, useState } from "react";
 
 type AdminOrder = {
   id: string;
+  userName: string;
   date: string;
-  user: {
-    name: string;
-  };
-  items: {
-    food: {
-      name: string;
-    };
-  }[];
+  foodNames: string[];
 };
 
 export default function AdminPage() {
+  const [groupBy, setGroupBy] = useState<"day" | "user">("day");
+  const [filterValue, setFilterValue] = useState<string>(""); // selected date or user
+  const [filterOptions, setFilterOptions] = useState<string[]>([]); // available dates or users
+
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch filter options when groupBy changes
   useEffect(() => {
-    fetch("/api/admin/orders")
+    const fetchFilters = async () => {
+      const res = await fetch(`/api/admin/filters?groupBy=${groupBy}`);
+      const data = await res.json();
+      setFilterOptions(data.options);
+      setFilterValue(data.options[0] ?? "");
+    };
+    fetchFilters();
+  }, [groupBy]);
+
+  // Fetch orders based on current groupBy and selected filter
+  useEffect(() => {
+    if (!filterValue) return;
+
+    setLoading(true);
+    fetch(
+      `/api/admin/orders?groupBy=${groupBy}&value=${encodeURIComponent(
+        filterValue
+      )}`
+    )
       .then((res) => res.json())
-      .then(setOrders)
+      .then((data) => {
+        if (groupBy === "day") {
+          const group = data?.data?.[0];
+          setOrders(group?.orders ?? []);
+        } else {
+          setOrders(data?.data ?? []);
+        }
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [groupBy, filterValue]);
 
   return (
     <main className="p-4">
-      <h1 className="text-xl font-bold mb-4">📋 Lịch sử đặt đồ ăn</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">📋 Lịch sử đặt đồ ăn</h1>
+        <select
+          value={groupBy}
+          onChange={(e) => {
+            setGroupBy(e.target.value as "day" | "user");
+            setOrders([]);
+          }}
+          className="border rounded p-1"
+        >
+          <option value="day">Theo ngày</option>
+          <option value="user">Theo người dùng</option>
+        </select>
+      </div>
+
+      {/* Filter select */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">
+          {groupBy === "day" ? "Chọn ngày:" : "Chọn người dùng:"}
+        </label>
+        <select
+          value={filterValue}
+          onChange={(e) => setFilterValue(e.target.value)}
+          className="border rounded p-2 w-full"
+        >
+          {filterOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {groupBy === "day"
+                ? new Date(opt).toLocaleDateString("vi-VN")
+                : opt}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {loading ? (
         <p>Đang tải...</p>
@@ -42,12 +99,13 @@ export default function AdminPage() {
               className="border rounded-xl p-4 shadow-sm bg-white"
             >
               <div className="text-sm text-gray-500">
-                {new Date(order.date).toLocaleDateString("vi-VN")} —{" "}
-                <span className="font-medium">{order.user.name}</span>
+                {groupBy === "user" &&
+                  new Date(order.date).toLocaleDateString("vi-VN")}
+                {groupBy === "day" && (
+                  <span className="font-medium">{order.userName}</span>
+                )}
               </div>
-              <div className="mt-2">
-                🍽️ {order.items.map((item) => item.food.name).join(", ")}
-              </div>
+              <div className="mt-2">🍽️ {order.foodNames.join(", ")}</div>
             </div>
           ))}
         </div>
