@@ -4,14 +4,14 @@ import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui";
 import { useEffect, useState } from "react";
-import { ParsedFood } from "@/types";
+import { Food } from "@/types";
 import { TodayOrderModal, Navbar } from "@/components";
 
 export default function Home() {
   const { guestName, setGuestName, selectedItems, toggleItem, submitOrder } =
     useCartStore();
 
-  const [foods, setFoods] = useState<ParsedFood[]>([]);
+  const [foods, setFoods] = useState<Food[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 

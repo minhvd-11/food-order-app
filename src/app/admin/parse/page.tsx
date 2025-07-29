@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Textarea, Card, Button } from "@/components/ui";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ParsedFood } from "@/types";
+import { Food } from "@/types";
 import { Navbar } from "@/components";
 
 export default function AdminParsePage() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ParsedFood[]>([]);
+  const [result, setResult] = useState<Food[]>([]);
 
   const handleParse = async () => {
     setLoading(true);
@@ -26,7 +26,7 @@ export default function AdminParsePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Lỗi khi phân tích danh sách");
 
-      const foodsWithId: ParsedFood[] = data.foods.map(
+      const foodsWithId: Food[] = data.foods.map(
         (food: { name: string }, index: number) => ({
           id: index,
           name: food.name,
