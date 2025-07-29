@@ -3,9 +3,9 @@
 import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ParsedFood } from "@/types";
+import { TodayOrderModal, Navbar } from "@/components";
 
 export default function Home() {
   const { guestName, setGuestName, selectedItems, toggleItem, submitOrder } =
@@ -13,6 +13,7 @@ export default function Home() {
 
   const [foods, setFoods] = useState<ParsedFood[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -35,11 +36,7 @@ export default function Home() {
 
   return (
     <main className="p-4 max-w-3xl mx-auto">
-      <Link href="/admin/orders" className="text-blue-600 underline">
-        Trang quản trị
-      </Link>
-
-      <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
+      <Navbar />
 
       {/* Guest Name Input */}
       <div className="mb-4">
@@ -54,6 +51,17 @@ export default function Home() {
           placeholder="Nhập tên để lưu đơn"
         />
       </div>
+
+      <button
+        onClick={() => setShowModal(true)}
+        className="mt-4 mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        📅 Xem đơn đặt hôm nay
+      </button>
+
+      {showModal && <TodayOrderModal onClose={() => setShowModal(false)} />}
+
+      <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
 
       {/* Food Cards */}
       {loading ? (

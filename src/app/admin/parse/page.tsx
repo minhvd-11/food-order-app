@@ -5,6 +5,7 @@ import { Textarea, Card, Button } from "@/components/ui";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ParsedFood } from "@/types";
+import { Navbar } from "@/components";
 
 export default function AdminParsePage() {
   const [text, setText] = useState("");
@@ -63,6 +64,7 @@ export default function AdminParsePage() {
 
   return (
     <main className="p-6 space-y-6">
+      <Navbar />
       <h1 className="text-2xl font-bold">📋 Phân tích danh sách món ăn</h1>
 
       <Textarea
