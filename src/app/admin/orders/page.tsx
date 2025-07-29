@@ -4,9 +4,15 @@ import { useEffect, useState } from "react";
 
 type AdminOrder = {
   id: string;
-  userName: string;
   date: string;
-  foodNames: string[];
+  user: {
+    name: string;
+  };
+  items: {
+    food: {
+      name: string;
+    };
+  }[];
 };
 
 export default function AdminPage() {
@@ -37,9 +43,11 @@ export default function AdminPage() {
             >
               <div className="text-sm text-gray-500">
                 {new Date(order.date).toLocaleDateString("vi-VN")} —{" "}
-                <span className="font-medium">{order.userName}</span>
+                <span className="font-medium">{order.user.name}</span>
               </div>
-              <div className="mt-2">🍽️ {order.foodNames.join(", ")}</div>
+              <div className="mt-2">
+                🍽️ {order.items.map((item) => item.food.name).join(", ")}
+              </div>
             </div>
           ))}
         </div>

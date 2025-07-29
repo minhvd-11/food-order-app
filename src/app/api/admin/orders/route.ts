@@ -1,32 +1,24 @@
 // app/api/admin/orders/route.ts
-
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const dateParam = req.nextUrl.searchParams.get("date");
-
-  let dateFilter = {};
-  if (dateParam) {
-    const date = new Date(dateParam);
-    dateFilter = {
-      date: {
-        gte: new Date(date.setHours(0, 0, 0, 0)),
-        lt: new Date(date.setHours(24, 0, 0, 0)),
+export async function GET() {
+  try {
+    const orders = await prisma.order.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: true,
+        items: {
+          include: {
+            food: true,
+          },
+        },
       },
-    };
+    });
+
+    return NextResponse.json(orders);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
-
-  const orders = await prisma.order.findMany({
-    where: dateFilter,
-    include: {
-      user: true,
-      items: {
-        include: { food: true },
-      },
-    },
-    orderBy: { date: "desc" },
-  });
-
-  return NextResponse.json({ orders });
 }
