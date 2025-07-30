@@ -37,7 +37,6 @@ export default function Home() {
   return (
     <main className="p-4 max-w-3xl mx-auto">
       <Navbar />
-
       {/* Guest Name Input */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">
