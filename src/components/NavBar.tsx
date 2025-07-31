@@ -6,8 +6,9 @@ import clsx from "clsx";
 
 const navLinks = [
   { href: "/", label: "Trang chủ" },
-  { href: "/admin/orders", label: "Quản trị đơn" },
+  { href: "/admin/orders", label: "Quản lý đơn" },
   { href: "/admin/parse", label: "Tạo danh sách" },
+  { href: "/admin/manage", label: "Quản trị" },
 ];
 
 export function Navbar() {
