@@ -1,6 +1,6 @@
-// app/api/admin/foods/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { fromZonedTime } from "date-fns-tz";
 
 export async function POST(req: Request) {
   try {
@@ -8,7 +8,8 @@ export async function POST(req: Request) {
     const { foods, date } = body as { foods: string[]; date?: string };
 
     const parsedDate = date ? new Date(date) : new Date();
-    const dateOnly = new Date(parsedDate.toISOString().split("T")[0]);
+    const localDate = fromZonedTime(parsedDate, "Asia/Ho_Chi_Minh");
+    localDate.setHours(0, 0, 0, 0);
 
     const foodRecords = await Promise.all(
       foods.map(async (name) => {
@@ -18,17 +19,16 @@ export async function POST(req: Request) {
           create: { name },
         });
 
-        // Upsert DayFood based on (date, foodId)
         await prisma.dayFood.upsert({
           where: {
             date_foodId: {
-              date: dateOnly,
+              date: localDate,
               foodId: food.id,
             },
           },
           update: {},
           create: {
-            date: dateOnly,
+            date: localDate,
             foodId: food.id,
           },
         });
