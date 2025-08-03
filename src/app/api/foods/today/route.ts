@@ -10,6 +10,9 @@ export async function GET() {
   const start = fromZonedTime(startOfDay(now), timeZone);
   const end = fromZonedTime(endOfDay(now), timeZone);
 
+  console.log(now, " ", start, " ", end);
+  console.log(start.toISOString(), " ", end.toISOString);
+
   try {
     const foods = await prisma.dayFood.findMany({
       where: {
