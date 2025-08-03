@@ -1,163 +1,105 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { type User } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
 import Avatar from "./avatar";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
-export default function AccountForm({ user }: { user: User | null }) {
+interface UserProfile {
+  id: string;
+  name: string;
+  shortName: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
+export default function AccountForm({ user }: { user: User }) {
   const supabase = createClient();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fullname, setFullname] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [website, setWebsite] = useState<string | null>(null);
-  const [avatar_url, setAvatarUrl] = useState<string | null>(null);
-
-  const getProfile = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select("full_name, username, website, avatar_url")
-        .eq("id", user?.id)
-        .single();
-
-      if (error && status !== 406) throw error;
-
-      if (data) {
-        setFullname(data.full_name);
-        setUsername(data.username);
-        setWebsite(data.website);
-        setAvatarUrl(data.avatar_url);
-      }
-    } catch (error) {
-      alert("Error loading user data!");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, supabase]);
+  const [name, setName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
-    getProfile();
-  }, [user, getProfile]);
+    const loadProfile = async () => {
+      const res = await fetch("/api/users");
+      const users: UserProfile[] = await res.json();
+      const current = users.find((u) => u.id === user.id);
 
-  async function updateProfile({
-    fullname,
-    username,
-    website,
-    avatar_url,
-  }: {
-    fullname: string | null;
-    username: string | null;
-    website: string | null;
-    avatar_url: string | null;
-  }) {
-    try {
-      setLoading(true);
+      if (current) {
+        setProfile(current);
+        setName(current.name || "");
+        setAvatarUrl(current.avatarUrl || "");
+      }
 
-      const { error } = await supabase.from("profiles").upsert({
-        id: user?.id as string,
-        full_name: fullname,
-        username,
-        website,
-        avatar_url,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-      alert("Profile updated!");
-    } catch (error) {
-      alert("Error updating the data!");
-    } finally {
       setLoading(false);
+    };
+
+    loadProfile();
+  }, []);
+
+  const handleSave = async () => {
+    if (!profile) return;
+
+    const res = await fetch(`/api/users/${profile.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name, avatarUrl }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) {
+      alert("Failed to update profile");
+    } else {
+      alert("Profile updated successfully!");
     }
-  }
+  };
+
+  if (loading || !profile) return <p>Loading...</p>;
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">Account Settings</h2>
+    <div className="space-y-6 max-w-md mx-auto">
+      <Avatar
+        avatarUrl={avatarUrl}
+        onUpload={(url) => setAvatarUrl(url)}
+        size={120}
+      />
 
-      <div className="flex justify-center mb-6">
-        <Avatar
-          avatarUrl={avatar_url}
-          size={100}
-          onUpload={(newUrl) => {
-            setAvatarUrl(newUrl);
-            updateProfile({
-              fullname,
-              username,
-              website,
-              avatar_url: newUrl,
-            });
-          }}
+      <div>
+        <label className="block text-sm font-medium mb-1">Email</label>
+        <input
+          type="text"
+          value={profile.email}
+          disabled
+          className="w-full border px-3 py-2 rounded bg-gray-100 text-sm"
         />
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="text"
-            value={user?.email ?? ""}
-            disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Full Name</label>
-          <input
-            type="text"
-            value={fullname ?? ""}
-            onChange={(e) => setFullname(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="Your full name"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Username</label>
-          <input
-            type="text"
-            value={username ?? ""}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="Your username"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Website</label>
-          <input
-            type="url"
-            value={website ?? ""}
-            onChange={(e) => setWebsite(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="https://your-site.com"
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Short Name</label>
+        <input
+          type="text"
+          value={profile.shortName}
+          disabled
+          className="w-full border px-3 py-2 rounded bg-gray-100 text-sm"
+        />
       </div>
 
-      <div className="mt-6 flex flex-col gap-3">
-        <button
-          onClick={() =>
-            updateProfile({ fullname, username, website, avatar_url })
-          }
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition"
-        >
-          {loading ? "Saving..." : "Update Profile"}
-        </button>
-
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="w-full border border-red-500 text-red-600 hover:bg-red-50 py-2 px-4 rounded-md transition"
-          >
-            Sign out
-          </button>
-        </form>
+      <div>
+        <label className="block text-sm font-medium mb-1">Full Name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full border px-3 py-2 rounded text-sm"
+        />
       </div>
+
+      <button
+        onClick={handleSave}
+        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+      >
+        Save
+      </button>
     </div>
   );
 }

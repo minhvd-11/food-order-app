@@ -9,7 +9,7 @@ interface SketchyButtonProps extends React.ComponentProps<"button"> {
 
 export function SketchyButton({ children, clt, ...props }: SketchyButtonProps) {
   return (
-    <button className={`sketchy-button font-hand mb-4 ${clt}`} {...props}>
+    <button className={`sketchy-button font-hand ${clt}`} {...props}>
       <span>{children}</span>
     </button>
   );

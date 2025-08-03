@@ -13,14 +13,36 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/orders?groupBy=day&value=" + new Date().toISOString())
-      .then((res) => res.json())
-      .then((data) => {
-        const todayGroup = data?.data?.[0];
-        setOrders(todayGroup?.orders ?? []);
-      })
-      .finally(() => setLoading(false));
+    fetchTodayOrders();
   }, []);
+
+  const fetchTodayOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        "/api/admin/orders?groupBy=day&value=" + new Date().toISOString()
+      );
+      const data = await res.json();
+      const todayGroup = data?.data?.[0];
+      setOrders(todayGroup?.orders ?? []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeOrder = async (orderId: string) => {
+    const confirm = window.confirm("❗ Bạn có chắc muốn xóa đơn này?");
+    if (!confirm) return;
+
+    await fetch(`/api/admin/manage-orders`, {
+      method: "DELETE",
+      body: JSON.stringify({ orderId }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // Refresh the list
+    fetchTodayOrders();
+  };
 
   const handleCopy = async () => {
     const text = orders
@@ -58,9 +80,17 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
               {orders.map((o) => (
                 <li
                   key={o.id}
-                  className="border rounded p-3 bg-gray-50 shadow-sm text-sm"
+                  className="border rounded p-3 bg-gray-50 shadow-sm text-sm flex justify-between items-start gap-3"
                 >
-                  <strong>{o.userName}</strong>: {o.foodNames.join(", ")}
+                  <div>
+                    <strong>{o.userName}</strong>: {o.foodNames.join(", ")}
+                  </div>
+                  <button
+                    onClick={() => removeOrder(o.id)}
+                    className="text-red-600 hover:text-red-800 text-xs"
+                  >
+                    🗑️ Xóa
+                  </button>
                 </li>
               ))}
             </ul>

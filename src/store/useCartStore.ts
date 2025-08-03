@@ -7,15 +7,20 @@ type FoodItem = {
 
 interface CartStore {
   guestName: string;
+  shortName: string;
   setGuestName: (name: string) => void;
+  setShortName: (short: string) => void;
   selectedItems: FoodItem[];
   toggleItem: (item: FoodItem) => void;
   submitOrder: () => void;
+  loading: boolean;
 }
 
 export const useCartStore = create<CartStore>((set, get) => ({
   guestName: "",
+  shortName: "",
   setGuestName: (name) => set({ guestName: name }),
+  setShortName: (short) => set({ shortName: short }),
   selectedItems: [],
   toggleItem: (item) => {
     const current = get().selectedItems;
@@ -25,12 +30,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
       : [...current, item];
     set({ selectedItems: updated });
   },
+  loading: false,
 
   submitOrder: async () => {
-    const { guestName, selectedItems } = get();
+    const { guestName, shortName, selectedItems } = get();
 
-    if (!guestName.trim()) {
-      alert("Vui lòng nhập tên!");
+    if (!guestName.trim() || !shortName.trim()) {
+      alert("Vui lòng nhập đầy đủ tên và tên viết tắt!");
       return;
     }
 
@@ -38,6 +44,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
       alert("Vui lòng chọn ít nhất 1 món!");
       return;
     }
+
+    set({ loading: true }); // Start loading
 
     try {
       const res = await fetch("/api/order", {
@@ -47,6 +55,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         },
         body: JSON.stringify({
           name: guestName,
+          shortName,
           foodIds: selectedItems.map((item) => item.id),
         }),
       });
@@ -57,12 +66,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
       }
 
       alert("🧾 Đơn đã được gửi thành công!");
-
-      // Reset form
-      set({ guestName: "", selectedItems: [] });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      set({ guestName: "", shortName: "", selectedItems: [] });
     } catch (error: any) {
       alert("🚨 Lỗi: " + error.message);
+    } finally {
+      set({ loading: false }); // Stop loading no matter what
     }
   },
 }));

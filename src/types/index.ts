@@ -1,1 +1,1 @@
-export * from "@/types/parseFood";
+export * from "@/types/type";

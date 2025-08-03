@@ -15,7 +15,7 @@ const navLinks = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -67,7 +67,9 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           {userEmail ? (
             <>
-              <span className="text-sm text-gray-700">{userEmail}</span>
+              <Link href="/account" className="text-sm text-gray-700">
+                {userEmail}
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-sm border px-3 py-1 rounded hover:bg-gray-100"

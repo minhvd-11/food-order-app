@@ -1,63 +1,107 @@
 "use client";
 
-import { useCartStore } from "@/store/useCartStore";
-import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui";
 import { useEffect, useState } from "react";
-import { Food } from "@/types";
-import { TodayOrderModal, SketchyButton } from "@/components";
+import { SketchyButton } from "@/components";
+import { useCartStore } from "@/store/useCartStore";
+import { Card } from "@/components/ui";
+import { cn } from "@/lib/utils";
+import { TodayOrderModal } from "@/components";
+import { Food, User } from "@/types";
 
 export default function Home() {
-  const { guestName, setGuestName, selectedItems, toggleItem, submitOrder } =
-    useCartStore();
+  const {
+    guestName,
+    setGuestName,
+    shortName,
+    setShortName,
+    selectedItems,
+    toggleItem,
+    submitOrder,
+    loading: submitLoading,
+  } = useCartStore();
 
   const [foods, setFoods] = useState<Food[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    const fetchFoods = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch("/api/foods/today");
-        const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.error || "Lỗi khi tải danh sách món ăn");
-        setFoods(data);
+        const [foodsRes, usersRes] = await Promise.all([
+          fetch("/api/foods/today"),
+          fetch("/api/users"),
+        ]);
+        const foodsData = await foodsRes.json();
+        const usersData = await usersRes.json();
+        setFoods(foodsData);
+        setUsers(usersData);
       } catch (err) {
         console.error(err);
         setFoods([]);
+        setUsers([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFoods();
+    fetchData();
   }, []);
 
   return (
     <main className="p-6 space-y-6">
       <div className="p-4 max-w-3xl mx-auto">
-        {/* Guest Name Input */}
-        <div className="flex justify-between mb-4">
-          <div>
+        {/* Name & Shortname Inputs */}
+        <div className="flex justify-between gap-4 items-end mb-4 flex-wrap">
+          <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium mb-1">
-              👤 Tên của bạn:
+              🧑 Tên của bạn (chọn từ danh sách):
             </label>
-
-            <input
-              type="text"
-              className="w-half p-2 border rounded-md"
+            <select
               value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              placeholder="Nhập tên để lưu đơn"
-            />
-          </div>
-          <div>
-            <SketchyButton onClick={() => setShowModal(true)}>
-              Xem đơn
-            </SketchyButton>
+              onChange={(e) => {
+                const selectedName = e.target.value;
+                setGuestName(selectedName);
+
+                const selectedUser = users.find((u) => u.name === selectedName);
+                if (selectedUser) {
+                  setShortName(selectedUser.shortName);
+                } else {
+                  setShortName(""); // reset if switching to new entry
+                }
+              }}
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="">--Chọn tên bạn--</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.name}>
+                  {user.name} ({user.shortName})
+                </option>
+              ))}
+            </select>
           </div>
 
+          {!shortName && (
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium mb-1">
+                ✏️ Hoặc nhập tên mới:
+              </label>
+              <input
+                type="text"
+                placeholder="Tên"
+                value={guestName}
+                onChange={(e) => {
+                  setGuestName(e.target.value);
+                  setShortName(e.target.value);
+                }}
+                className="w-full p-2 border rounded-md"
+              />
+            </div>
+          )}
+
+          <SketchyButton onClick={() => setShowModal(true)}>
+            Xem đơn
+          </SketchyButton>
           {showModal && <TodayOrderModal onClose={() => setShowModal(false)} />}
         </div>
 
@@ -66,15 +110,14 @@ export default function Home() {
         {/* Food Cards */}
         {loading ? (
           <p>⏳ Đang tải danh sách món ăn...</p>
-        ) : !foods?.length ? (
+        ) : !foods.length ? (
           <p>❌ Không có món ăn nào cho hôm nay.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {foods?.map((food) => {
+            {foods.map((food) => {
               const isSelected = selectedItems.some(
                 (item) => item.id === food.id
               );
-
               return (
                 <Card
                   key={food.id}
@@ -104,7 +147,9 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <SketchyButton onClick={submitOrder}>Lưu đơn</SketchyButton>
+            <SketchyButton onClick={submitOrder}>
+              {submitLoading ? "Đang lưu..." : "Lưu đơn"}
+            </SketchyButton>
           </div>
         )}
       </div>

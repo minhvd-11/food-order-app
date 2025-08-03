@@ -1,5 +1,4 @@
 import UserOrderStats from "@/components/UserOrderInfo";
-import ErrorPage from "../error/page";
 import AccountForm from "./account-form";
 import { createClient } from "@/lib/supabase/server";
 

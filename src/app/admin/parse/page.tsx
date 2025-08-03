@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Textarea, Card, Button } from "@/components/ui";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Food } from "@/types";
 import { SketchyButton } from "@/components";
+import { Food } from "@/types";
 
 export default function AdminParsePage() {
   const [text, setText] = useState("");

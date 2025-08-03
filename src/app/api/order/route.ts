@@ -3,50 +3,47 @@ import { NextResponse } from "next/server";
 import { startOfDay } from "date-fns";
 
 type OrderRequest = {
-  shortName: string;
-  name?: string;
-  email?: string;
-  avatarUrl?: string;
+  name: string;
+  shortName?: string;
   foodIds: string[];
 };
 
 export async function POST(req: Request) {
-  const { shortName, name, email, avatarUrl, foodIds }: OrderRequest =
-    await req.json();
+  const { name, shortName, foodIds }: OrderRequest = await req.json();
 
-  if (!shortName || !Array.isArray(foodIds) || foodIds.length === 0) {
+  if (!name || !Array.isArray(foodIds) || foodIds.length === 0) {
     return NextResponse.json(
-      { message: "Missing shortName or foodIds" },
+      { message: "Thiếu tên hoặc món ăn" },
       { status: 400 }
     );
   }
 
   const today = startOfDay(new Date());
 
-  // First try to find existing user
-  let user = await prisma.user.findUnique({ where: { shortName } });
+  let user = await prisma.user.findFirst({ where: { name } });
 
-  // If not exists, create new
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        id: crypto.randomUUID(),
-        shortName,
-        name: name || shortName,
-        email,
-        avatarUrl,
-      },
+  if (!user && shortName) {
+    user = await prisma.user.upsert({
+      where: { shortName },
+      update: { name },
+      create: { id: shortName, shortName, name },
     });
   }
 
-  // Check if already submitted today
+  if (!user) {
+    return NextResponse.json(
+      { message: "Không tìm thấy người dùng" },
+      { status: 400 }
+    );
+  }
+
   const existingOrder = await prisma.order.findFirst({
     where: { userId: user.id, date: today },
   });
 
   if (existingOrder) {
     return NextResponse.json(
-      { message: "Already submitted today" },
+      { message: "Đã đặt đơn hôm nay rồi" },
       { status: 400 }
     );
   }
@@ -61,5 +58,8 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ message: "Order submitted", orderId: order.id });
+  return NextResponse.json({
+    message: "Lưu đơn thành công",
+    orderId: order.id,
+  });
 }
