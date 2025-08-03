@@ -26,8 +26,11 @@ model DayFood {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String   @unique
+  id        String   @id
+  name      String
+  shortName String   @unique
+  email     String?  @unique
+  avatarUrl String?
   createdAt DateTime @default(now())
   orders    Order[]
 }

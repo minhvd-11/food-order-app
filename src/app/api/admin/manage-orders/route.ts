@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     orders: orders.map((o) => ({
       id: o.id,
+      userShortName: o.user.shortName,
       userName: o.user.name,
       foodNames: o.items.map((i) => i.food.name),
     })),
@@ -38,24 +39,28 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function POST(req: Request) {
-  const { userName, date, foodIds } = await req.json();
+  const { shortName, date, foodIds } = await req.json();
 
-  if (!userName || !date || !Array.isArray(foodIds)) {
+  if (!shortName || !date || !Array.isArray(foodIds)) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  // Find or create the user
-  const user = await prisma.user.upsert({
-    where: { name: userName },
-    update: {},
-    create: { name: userName },
+  // Find user by shortName
+  const user = await prisma.user.findUnique({
+    where: { shortName },
   });
+
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  const orderDate = startOfDay(new Date(date));
 
   // Remove existing order (if any) for that date
   await prisma.order.deleteMany({
     where: {
       userId: user.id,
-      date: new Date(date),
+      date: orderDate,
     },
   });
 
@@ -63,7 +68,7 @@ export async function POST(req: Request) {
   const order = await prisma.order.create({
     data: {
       userId: user.id,
-      date: new Date(date),
+      date: orderDate,
       items: {
         create: foodIds.map((foodId: string) => ({
           foodId,

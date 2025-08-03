@@ -7,10 +7,13 @@ export async function GET(req: NextRequest) {
 
   if (groupBy === "user") {
     const users = await prisma.user.findMany({
-      orderBy: { name: "asc" },
-      select: { name: true },
+      orderBy: { shortName: "asc" },
+      select: { shortName: true },
     });
-    return NextResponse.json({ groupBy, options: users.map((u) => u.name) });
+    return NextResponse.json({
+      groupBy,
+      options: users.map((u) => u.shortName),
+    });
   }
 
   // Default: groupBy day

@@ -5,7 +5,7 @@ import { Textarea, Card, Button } from "@/components/ui";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Food } from "@/types";
-import { Navbar, SketchyButton } from "@/components";
+import { SketchyButton } from "@/components";
 
 export default function AdminParsePage() {
   const [text, setText] = useState("");
@@ -64,7 +64,6 @@ export default function AdminParsePage() {
 
   return (
     <main className="p-6 space-y-6">
-      <Navbar />
       <h1 className="text-2xl font-bold">📋 Phân tích danh sách món ăn</h1>
 
       <Textarea
@@ -74,7 +73,7 @@ export default function AdminParsePage() {
         className="min-h-[120px]"
       />
 
-      <SketchyButton onClick={handleParse} disabled={loading}>
+      <SketchyButton onClick={handleParse} disabled={loading || !text}>
         {loading ? "Đang phân tích..." : "Phân tích"}
       </SketchyButton>
 
@@ -94,7 +93,7 @@ export default function AdminParsePage() {
             ))}
           </div>
 
-          <Button onClick={handleSave}>{"Lưu danh sách"}</Button>
+          <SketchyButton onClick={handleSave}>{"Lưu danh sách"}</SketchyButton>
         </>
       )}
     </main>

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui";
 import { useEffect, useState } from "react";
 import { Food } from "@/types";
-import { TodayOrderModal, Navbar, SketchyButton } from "@/components";
+import { TodayOrderModal, SketchyButton } from "@/components";
 
 export default function Home() {
   const { guestName, setGuestName, selectedItems, toggleItem, submitOrder } =
@@ -36,7 +36,6 @@ export default function Home() {
 
   return (
     <main className="p-6 space-y-6">
-      <Navbar />
       <div className="p-4 max-w-3xl mx-auto">
         {/* Guest Name Input */}
         <div className="flex justify-between mb-4">

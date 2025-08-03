@@ -1,4 +1,3 @@
-// app/api/admin/orders/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { startOfDay } from "date-fns";
@@ -13,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   if (groupBy === "user") {
     const orders = await prisma.order.findMany({
-      where: { user: { name: value } },
+      where: { user: { shortName: value } },
       include: {
         user: true,
         items: { include: { food: true } },
@@ -22,11 +21,13 @@ export async function GET(req: NextRequest) {
     });
 
     const grouped = orders.map((o) => ({
+      userShortName: o.user.shortName,
       userName: o.user.name,
       foodNames: o.items.map((i) => i.food.name),
       date: o.date,
       id: o.id,
     }));
+
     return NextResponse.json({ groupBy: "user", data: grouped });
   } else {
     const date = startOfDay(new Date(value));
@@ -43,12 +44,14 @@ export async function GET(req: NextRequest) {
       {
         date,
         orders: orders.map((o) => ({
+          userShortName: o.user.shortName,
           userName: o.user.name,
           foodNames: o.items.map((i) => i.food.name),
           id: o.id,
         })),
       },
     ];
+
     return NextResponse.json({ groupBy: "day", data: groupedByDay });
   }
 }

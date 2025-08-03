@@ -35,3 +35,17 @@
   padding-bottom: 0px;
   box-shadow: 0 1px 0 #000;
 }
+
+.sketchy-button:disabled,
+.sketchy-button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.sketchy-button:disabled span,
+.sketchy-button[disabled] span {
+  background: #eee;
+  border-color: #aaa;
+  color: #777;
+}

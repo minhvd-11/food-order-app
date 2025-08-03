@@ -3,28 +3,43 @@ import { NextResponse } from "next/server";
 import { startOfDay } from "date-fns";
 
 type OrderRequest = {
-  name: string;
+  shortName: string;
+  name?: string;
+  email?: string;
+  avatarUrl?: string;
   foodIds: string[];
 };
 
 export async function POST(req: Request) {
-  const { name, foodIds }: OrderRequest = await req.json();
+  const { shortName, name, email, avatarUrl, foodIds }: OrderRequest =
+    await req.json();
 
-  if (!name || !Array.isArray(foodIds) || foodIds.length === 0) {
+  if (!shortName || !Array.isArray(foodIds) || foodIds.length === 0) {
     return NextResponse.json(
-      { message: "Missing name or foodIds" },
+      { message: "Missing shortName or foodIds" },
       { status: 400 }
     );
   }
 
   const today = startOfDay(new Date());
 
-  const user = await prisma.user.upsert({
-    where: { name },
-    update: {},
-    create: { name },
-  });
+  // First try to find existing user
+  let user = await prisma.user.findUnique({ where: { shortName } });
 
+  // If not exists, create new
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        id: crypto.randomUUID(),
+        shortName,
+        name: name || shortName,
+        email,
+        avatarUrl,
+      },
+    });
+  }
+
+  // Check if already submitted today
   const existingOrder = await prisma.order.findFirst({
     where: { userId: user.id, date: today },
   });

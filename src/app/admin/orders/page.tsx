@@ -1,6 +1,5 @@
 "use client";
 
-import { Navbar } from "@/components";
 import { useEffect, useState } from "react";
 
 type AdminOrder = {
@@ -53,7 +52,6 @@ export default function AdminPage() {
 
   return (
     <main className="p-4">
-      <Navbar />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold">📋 Lịch sử đặt đồ ăn</h1>
         <select

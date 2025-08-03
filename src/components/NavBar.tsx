@@ -34,7 +34,7 @@ export function Navbar() {
 
   return (
     <nav className="w-full bg-white border-b shadow-sm mb-6">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex gap-6 items-center justify-around">
+      <div className="max-w-5xl mx-auto px-4 py-3 flex gap-6 items-center justify-between">
         {/* Logo */}
         <Link href="/">
           <Image
