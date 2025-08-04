@@ -1,14 +1,7 @@
 "use client";
 
+import { FoodOrder } from "@/types";
 import { useEffect, useState } from "react";
-
-type FoodOrder = {
-  id: string;
-  userShortName: string;
-  userName: string;
-  foodNames: string[];
-  note?: string;
-};
 
 export function TodayOrderModal({ onClose }: { onClose: () => void }) {
   const [orders, setOrders] = useState<FoodOrder[]>([]);

@@ -1,54 +1,59 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { format } from "date-fns";
+import { FoodOrder, User } from "@/types";
 
 export default function UserOrderStats({ userId }: { userId: string }) {
-  const supabase = createClient();
-  const [orders, setOrders] = useState<Array<{ date: string; food: string }>>(
-    []
-  );
+  const [orders, setOrders] = useState<FoodOrder[]>([]);
+  const [user, setUser] = useState<User>();
   const [showCount, setShowCount] = useState(5);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    async function fetchOrders() {
-      const firstDayOfMonth = new Date();
-      firstDayOfMonth.setDate(1);
-      firstDayOfMonth.setHours(0, 0, 0, 0);
-
-      const { data, error } = await supabase
-        .from("orders")
-        .select("date, food")
-        .eq("user_id", userId)
-        .gte("date", firstDayOfMonth.toISOString())
-        .order("date", { ascending: false });
-
-      if (!error && data) {
-        setOrders(data);
+    const loadProfile = async () => {
+      const res = await fetch("/api/users");
+      const users: User[] = await res.json();
+      const current = users.find((u) => u.id === userId);
+      if (current) {
+        setUser(current);
       }
+    };
+    loadProfile();
+  }, []);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      const now = new Date();
+      const month = format(now, "yyyy-MM");
+
+      const res = await fetch(
+        `/api/admin/manage-orders?userId=${userId}&month=${month}`
+      );
+      const data = await res.json();
+      setOrders(data.orders || []);
       setLoading(false);
-    }
+    };
 
     fetchOrders();
   }, [userId]);
 
   const orderedDays = orders.length;
-  const totalMoney = orderedDays * 30000;
+  const totalMoney = orders.length * 30000;
 
   return (
     <div className="bg-white shadow rounded-lg p-6 w-full max-w-2xl">
-      <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+      <h3 className="text-lg font-semibold mb-4">Thống kê</h3>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div>
-          <p className="text-sm text-gray-500">User ID</p>
-          <p className="font-medium break-all">{userId}</p>
+          <p className="text-sm text-gray-500">Tên</p>
+          <p className="font-medium break-all">{user?.shortName}</p>
         </div>
         <div>
-          <p className="text-sm text-gray-500">Order Days</p>
-          <p className="font-medium">{orderedDays} ngày</p>
+          <p className="text-sm text-gray-500">Số lần đặt</p>
+          <p className="font-medium">{orderedDays} lần</p>
         </div>
         <div>
           <p className="text-sm text-gray-500">Tổng tiền</p>
@@ -81,7 +86,7 @@ export default function UserOrderStats({ userId }: { userId: string }) {
                   <td className="py-2">
                     {format(new Date(order.date), "yyyy-MM-dd")}
                   </td>
-                  <td className="py-2">{order.food}</td>
+                  <td className="py-2">{order.foodNames.join(", ")}</td>
                 </tr>
               ))}
             </tbody>

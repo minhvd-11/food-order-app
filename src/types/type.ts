@@ -49,3 +49,12 @@ export interface OrderItem {
   food?: Food;
   order?: Order;
 }
+
+export type FoodOrder = {
+  id: string;
+  userShortName: string;
+  userName: string;
+  foodNames: string[];
+  note?: string;
+  date: string;
+};

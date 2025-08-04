@@ -3,13 +3,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { startOfDay } from "date-fns";
 
 export async function GET(req: NextRequest) {
-  const dateParam = req.nextUrl.searchParams.get("date");
-  if (!dateParam) return NextResponse.json({ orders: [] });
+  const url = req.nextUrl;
+  const dateParam = url.searchParams.get("date");
+  const userId = url.searchParams.get("userId");
+  const monthParam = url.searchParams.get("month");
 
-  const date = startOfDay(new Date(dateParam));
+  let where: any = {};
+  if (dateParam) {
+    const date = startOfDay(new Date(dateParam));
+    where.date = date;
+  }
+
+  if (userId) {
+    where.userId = userId;
+  }
+
+  if (monthParam) {
+    const [year, month] = monthParam.split("-").map(Number);
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 0, 23, 59, 59); // end of last day
+    where.date = { gte: start, lte: end };
+  }
 
   const orders = await prisma.order.findMany({
-    where: { date },
+    where,
     include: {
       user: true,
       items: { include: { food: true } },
@@ -20,6 +37,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     orders: orders.map((o) => ({
       id: o.id,
+      date: o.date,
       userShortName: o.user.shortName,
       userName: o.user.name,
       foodNames: o.items.map((i) => i.food.name),
