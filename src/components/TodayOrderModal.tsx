@@ -1,15 +1,10 @@
 "use client";
 
+import { Order } from "@/types";
 import { useEffect, useState } from "react";
 
-type TodayOrder = {
-  id: string;
-  userName: string;
-  foodNames: string[];
-};
-
 export function TodayOrderModal({ onClose }: { onClose: () => void }) {
-  const [orders, setOrders] = useState<TodayOrder[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,7 +41,12 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
 
   const handleCopy = async () => {
     const text = orders
-      .map((o) => `${o.userName}: ${o.foodNames.join(", ")}`)
+      .map(
+        (o) =>
+          `${o.user?.name}: ${o.items?.join(", ")}${
+            o.note ? ` (${o.note})` : ""
+          }`
+      )
       .join("\n");
 
     try {
@@ -83,7 +83,8 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
                   className="border rounded p-3 bg-gray-50 shadow-sm text-sm flex justify-between items-start gap-3"
                 >
                   <div>
-                    <strong>{o.userName}</strong>: {o.foodNames.join(", ")}
+                    <strong>{o.user?.name}</strong>: {o.items?.join(", ")}$
+                    {o.note ? ` (${o.note})` : ""}
                   </div>
                   <button
                     onClick={() => removeOrder(o.id)}

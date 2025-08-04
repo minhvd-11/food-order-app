@@ -38,6 +38,7 @@ export interface Order {
   date: string; // ISO date string
   user?: User;
   items?: OrderItem[];
+  note: string;
 }
 
 // OrderItem.ts

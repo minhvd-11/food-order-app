@@ -40,6 +40,7 @@ model Order {
   userId    String
   createdAt DateTime    @default(now())
   date      DateTime
+  note      String?
   user      User        @relation(fields: [userId], references: [id])
   items     OrderItem[]
 }

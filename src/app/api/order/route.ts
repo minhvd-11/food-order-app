@@ -6,10 +6,11 @@ type OrderRequest = {
   name: string;
   shortName?: string;
   foodIds: string[];
+  note?: string;
 };
 
 export async function POST(req: Request) {
-  const { name, shortName, foodIds }: OrderRequest = await req.json();
+  const { name, shortName, foodIds, note }: OrderRequest = await req.json();
 
   if (!name || !Array.isArray(foodIds) || foodIds.length === 0) {
     return NextResponse.json(
@@ -51,6 +52,7 @@ export async function POST(req: Request) {
   const order = await prisma.order.create({
     data: {
       userId: user.id,
+      note,
       date: today,
       items: {
         create: foodIds.map((foodId) => ({ foodId })),

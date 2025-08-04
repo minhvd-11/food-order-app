@@ -8,8 +8,10 @@ type FoodItem = {
 interface CartStore {
   guestName: string;
   shortName: string;
+  note?: string;
   setGuestName: (name: string) => void;
   setShortName: (short: string) => void;
+  setNote?: (note: string) => void;
   selectedItems: FoodItem[];
   toggleItem: (item: FoodItem) => void;
   submitOrder: () => void;
@@ -19,6 +21,7 @@ interface CartStore {
 export const useCartStore = create<CartStore>((set, get) => ({
   guestName: "",
   shortName: "",
+  note: "",
   setGuestName: (name) => set({ guestName: name }),
   setShortName: (short) => set({ shortName: short }),
   selectedItems: [],
@@ -31,9 +34,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ selectedItems: updated });
   },
   loading: false,
+  setNote: (val: string) => set({ note: val }),
 
   submitOrder: async () => {
-    const { guestName, shortName, selectedItems } = get();
+    const { guestName, shortName, selectedItems, note } = get();
 
     if (!guestName.trim() || !shortName.trim()) {
       alert("Vui lòng nhập đầy đủ tên và tên viết tắt!");
@@ -56,6 +60,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         body: JSON.stringify({
           name: guestName,
           shortName,
+          note,
           foodIds: selectedItems.map((item) => item.id),
         }),
       });
@@ -66,7 +71,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
       }
 
       alert("🧾 Đơn đã được gửi thành công!");
-      set({ guestName: "", shortName: "", selectedItems: [] });
+      set({ guestName: "", shortName: "", note: "", selectedItems: [] });
     } catch (error: any) {
       alert("🚨 Lỗi: " + error.message);
     } finally {

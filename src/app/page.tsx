@@ -24,6 +24,7 @@ export default function Home() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -135,6 +136,19 @@ export default function Home() {
             })}
           </div>
         )}
+
+        <div className="mt-6">
+          <label className="block text-sm font-medium mb-1">
+            📝 Ghi chú thêm:
+          </label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="VD: Thêm ớt, thêm cà, ..."
+            className="w-full p-2 border rounded-md"
+            rows={3}
+          />
+        </div>
 
         {/* Selected Summary & Submit */}
         {selectedItems.length > 0 && (
