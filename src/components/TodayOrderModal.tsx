@@ -1,10 +1,17 @@
 "use client";
 
-import { Order } from "@/types";
 import { useEffect, useState } from "react";
 
+type FoodOrder = {
+  id: string;
+  userShortName: string;
+  userName: string;
+  foodNames: string[];
+  note?: string;
+};
+
 export function TodayOrderModal({ onClose }: { onClose: () => void }) {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,9 +21,9 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
   const fetchTodayOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        "/api/admin/orders?groupBy=day&value=" + new Date().toISOString()
-      );
+      const now = new Date();
+      const today = now.toISOString();
+      const res = await fetch(`/api/admin/orders?groupBy=day&value=${today}`);
       const data = await res.json();
       const todayGroup = data?.data?.[0];
       setOrders(todayGroup?.orders ?? []);
@@ -35,22 +42,21 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
       headers: { "Content-Type": "application/json" },
     });
 
-    // Refresh the list
     fetchTodayOrders();
   };
 
   const handleCopy = async () => {
     const text = orders
-      .map(
-        (o) =>
-          `${o.user?.name}: ${o.items?.join(", ")}${
-            o.note ? ` (${o.note})` : ""
-          }`
-      )
+      .map((o) => {
+        const items = o.foodNames?.join(", ") || "";
+        const note = o.note?.trim() ? ` (${o.note})` : "";
+        return `${o.userName}: ${items}${note}`;
+      })
       .join("\n");
 
     try {
       await navigator.clipboard.writeText(text);
+
       alert("📋 Đã sao chép danh sách đơn đặt hôm nay!");
     } catch (err) {
       console.error("Failed to copy:", err);
@@ -83,8 +89,11 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
                   className="border rounded p-3 bg-gray-50 shadow-sm text-sm flex justify-between items-start gap-3"
                 >
                   <div>
-                    <strong>{o.user?.name}</strong>: {o.items?.join(", ")}$
-                    {o.note ? ` (${o.note})` : ""}
+                    <strong>{o.userName}</strong>:{" "}
+                    {o.foodNames?.join(", ") || ""}
+                    {o.note?.trim() && (
+                      <span className="text-gray-700"> ({o.note})</span>
+                    )}
                   </div>
                   <button
                     onClick={() => removeOrder(o.id)}
