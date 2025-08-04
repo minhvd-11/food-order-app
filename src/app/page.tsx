@@ -82,23 +82,21 @@ export default function Home() {
             </select>
           </div>
 
-          {!shortName && (
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium mb-1">
-                ✏️ Hoặc nhập tên mới:
-              </label>
-              <input
-                type="text"
-                placeholder="Tên"
-                value={guestName}
-                onChange={(e) => {
-                  setGuestName(e.target.value);
-                  setShortName(e.target.value);
-                }}
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
-          )}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium mb-1">
+              ✏️ Hoặc nhập tên mới:
+            </label>
+            <input
+              type="text"
+              placeholder="Tên"
+              value={guestName}
+              onChange={(e) => {
+                setGuestName(e.target.value);
+                setShortName(e.target.value);
+              }}
+              className="w-full p-2 border rounded-md"
+            />
+          </div>
 
           <SketchyButton onClick={() => setShowModal(true)}>
             Xem đơn
