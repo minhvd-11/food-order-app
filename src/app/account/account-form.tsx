@@ -14,7 +14,6 @@ interface UserProfile {
 }
 
 export default function AccountForm({ user }: { user: User }) {
-  const supabase = createClient();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");

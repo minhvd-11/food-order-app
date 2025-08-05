@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
     const parsedDate = date ? new Date(date) : new Date();
     const localDate = fromZonedTime(parsedDate, "Asia/Ho_Chi_Minh");
-    localDate.setHours(0, 0, 0, 0);
+    localDate.setHours(17, 0, 0, 0);
 
     const foodRecords = await Promise.all(
       foods.map(async (name) => {

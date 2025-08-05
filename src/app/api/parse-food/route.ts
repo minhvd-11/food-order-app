@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const prompt = `
       Đây là đoạn văn bản có chứa các món ăn bằng tiếng Việt:
       "${text}"
-      Loại bỏ các từ ngữ thừa không phải món ăn, sửa lỗi chính tả và trích xuất từng món thành mảng JSON có dạng:
+      Loại bỏ các từ ngữ thừa không phải món ăn, sửa lỗi chính tả không tự sửa đổi thành món ăn khác, đảm bảo giữ nguyên số món ăn và trích xuất từng món thành mảng JSON có dạng:
       [{ "name": "tên món" }]
       Chỉ trả về JSON, không giải thích gì thêm.
     `;
