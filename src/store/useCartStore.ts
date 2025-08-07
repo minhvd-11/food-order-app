@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { toast } from "sonner";
 
 type FoodItem = {
   id: string;
@@ -11,7 +12,7 @@ interface CartStore {
   note?: string;
   setGuestName: (name: string) => void;
   setShortName: (short: string) => void;
-  setNote?: (note: string) => void;
+  setNote: (note?: string) => void;
   selectedItems: FoodItem[];
   toggleItem: (item: FoodItem) => void;
   submitOrder: () => void;
@@ -34,22 +35,22 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ selectedItems: updated });
   },
   loading: false,
-  setNote: (val: string) => set({ note: val }),
+  setNote: (val?: string) => set({ note: val }),
 
   submitOrder: async () => {
     const { guestName, shortName, selectedItems, note } = get();
 
     if (!guestName.trim() || !shortName.trim()) {
-      alert("Vui lòng nhập đầy đủ tên và tên viết tắt!");
+      toast.warning("Vui lòng nhập đầy đủ tên và tên viết tắt!");
       return;
     }
 
     if (selectedItems.length === 0) {
-      alert("Vui lòng chọn ít nhất 1 món!");
+      toast.warning("Vui lòng chọn ít nhất 1 món!");
       return;
     }
 
-    set({ loading: true }); // Start loading
+    set({ loading: true });
 
     try {
       const res = await fetch("/api/order", {
@@ -70,10 +71,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
         throw new Error(errorData.message || "Đặt đơn thất bại");
       }
 
-      alert("🧾 Đơn đã được gửi thành công!");
+      toast.success("🧾 Đơn đã được gửi thành công!");
       set({ guestName: "", shortName: "", note: "", selectedItems: [] });
     } catch (error: any) {
-      alert("🚨 Lỗi: " + error.message);
+      toast.error("🚨 Lỗi: " + error.message);
     } finally {
       set({ loading: false }); // Stop loading no matter what
     }

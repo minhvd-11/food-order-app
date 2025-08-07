@@ -15,7 +15,7 @@ export default function AdminParsePage() {
   const handleParse = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/parse-food", {
+      const res = await fetch("/api/admin/parse-food", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,23 +43,31 @@ export default function AdminParsePage() {
   };
 
   const handleSave = async () => {
-    const res = await fetch("/api/admin/foods", {
-      method: "POST",
-      body: JSON.stringify({
-        foods: result.map((item) => item.name),
-        date: new Date().toISOString(),
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/foods", {
+        method: "POST",
+        body: JSON.stringify({
+          foods: result.map((item) => item.name),
+          date: new Date().toISOString(),
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || "Lỗi khi lưu dữ liệu");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Lỗi khi lưu dữ liệu");
+      }
+
+      toast.success("Đã lưu danh sách món ăn cho ngày hôm nay");
+    } catch (error: any) {
+      toast.error(error.message || "Lỗi khi lưu dữ liệu");
+    } finally {
+      setLoading(false);
     }
-
-    alert("Đã lưu danh sách món ăn cho ngày hôm nay");
   };
 
   return (
@@ -93,7 +101,9 @@ export default function AdminParsePage() {
             ))}
           </div>
 
-          <SketchyButton onClick={handleSave}>{"Lưu danh sách"}</SketchyButton>
+          <SketchyButton onClick={handleSave} disabled={loading}>
+            {loading ? "Đang lưu..." : "Lưu"}
+          </SketchyButton>
         </>
       )}
     </main>

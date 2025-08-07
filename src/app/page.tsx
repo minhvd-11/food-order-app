@@ -1,30 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SketchyButton } from "@/components";
+import { SketchyButton, TodayOrderModal } from "@/components";
 import { useCartStore } from "@/store/useCartStore";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { TodayOrderModal } from "@/components";
 import { Food, User } from "@/types";
 
 export default function Home() {
   const {
     guestName,
     setGuestName,
-    shortName,
     setShortName,
     selectedItems,
     toggleItem,
     submitOrder,
     loading: submitLoading,
+    note,
+    setNote,
   } = useCartStore();
 
   const [foods, setFoods] = useState<Food[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [note, setNote] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,7 +62,6 @@ export default function Home() {
               onChange={(e) => {
                 const selectedName = e.target.value;
                 setGuestName(selectedName);
-
                 const selectedUser = users.find((u) => u.name === selectedName);
                 if (selectedUser) {
                   setShortName(selectedUser.shortName);
@@ -88,7 +86,7 @@ export default function Home() {
             </label>
             <input
               type="text"
-              placeholder="Tên"
+              placeholder="VD: minh.vd"
               value={guestName}
               onChange={(e) => {
                 setGuestName(e.target.value);
@@ -161,7 +159,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <SketchyButton onClick={submitOrder}>
+            <SketchyButton onClick={submitOrder} disabled={submitLoading}>
               {submitLoading ? "Đang lưu..." : "Lưu đơn"}
             </SketchyButton>
           </div>
