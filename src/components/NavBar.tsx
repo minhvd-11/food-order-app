@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
+import { UserMetadata } from "@supabase/supabase-js";
 
 const navLinks = [
   { href: "/admin/orders", label: "Quản lý đơn" },
@@ -15,13 +16,13 @@ const navLinks = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const [userEmail, setUserEmail] = useState<string>("");
+  const [userMetadata, setUserMetadata] = useState<UserMetadata>();
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (user && user.email) {
-        setUserEmail(user.email);
+      if (user && user.user_metadata) {
+        setUserMetadata(user.user_metadata);
       } else console.log(error);
     });
   }, []);
@@ -29,7 +30,7 @@ export function Navbar() {
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = "/"; // or use router.replace("/")
+    window.location.href = "/";
   };
 
   return (
@@ -65,10 +66,21 @@ export function Navbar() {
 
         {/* Auth Section */}
         <div className="flex items-center gap-3">
-          {userEmail ? (
+          {userMetadata ? (
             <>
               <Link href="/account" className="text-sm text-gray-700">
-                {userEmail}
+                <Image
+                  src={
+                    userMetadata.avatar_url || "/public/logo.Dailylunchlogo.png"
+                  }
+                  alt="Avatar"
+                  width={40}
+                  height={40}
+                  className="rounded-full ml-2"
+                />
+              </Link>
+              <Link href="/account" className="text-sm text-gray-700">
+                {userMetadata.name}
               </Link>
               <button
                 onClick={handleLogout}

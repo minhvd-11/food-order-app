@@ -44,7 +44,6 @@ export default function Avatar({
           src={previewUrl}
           alt="Avatar"
           className="rounded-full object-cover border"
-          style={{ height: size, width: size }}
         />
       ) : (
         <div

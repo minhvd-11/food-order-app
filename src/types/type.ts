@@ -50,11 +50,11 @@ export interface OrderItem {
   order?: Order;
 }
 
-export type FoodOrder = {
+export interface FoodOrder {
   id: string;
   userShortName: string;
   userName: string;
   foodNames: string[];
   note?: string;
   date: string;
-};
+}
