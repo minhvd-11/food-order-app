@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Avatar from "./avatar";
-import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 interface UserProfile {
   id: string;
@@ -47,9 +47,9 @@ export default function AccountForm({ user }: { user: User }) {
     });
 
     if (!res.ok) {
-      alert("Failed to update profile");
+      toast.error("Failed to update profile");
     } else {
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
     }
   };
 

@@ -41,7 +41,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     const { guestName, shortName, selectedItems, note } = get();
 
     if (!guestName.trim() || !shortName.trim()) {
-      toast.warning("Vui lòng nhập đầy đủ tên và tên viết tắt!");
+      toast.warning("Vui lòng chọn tên hoặc nhập tên mới!");
       return;
     }
 

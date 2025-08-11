@@ -2,6 +2,7 @@
 
 import { FoodOrder } from "@/types";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export function TodayOrderModal({ onClose }: { onClose: () => void }) {
   const [orders, setOrders] = useState<FoodOrder[]>([]);
@@ -50,10 +51,9 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
     try {
       await navigator.clipboard.writeText(text);
 
-      alert("📋 Đã sao chép danh sách đơn đặt hôm nay!");
+      toast.success("📋 Đã sao chép danh sách đơn đặt hôm nay!");
     } catch (err) {
-      console.error("Failed to copy:", err);
-      alert("❌ Lỗi khi sao chép vào clipboard.");
+      toast.error("❌ Lỗi khi sao chép vào clipboard.");
     }
   };
 
