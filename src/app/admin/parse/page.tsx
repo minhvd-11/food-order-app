@@ -9,11 +9,12 @@ import { Food } from "@/types";
 
 export default function AdminParsePage() {
   const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingParse, setLoadingParse] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
   const [result, setResult] = useState<Food[]>([]);
 
   const handleParse = async () => {
-    setLoading(true);
+    setLoadingParse(true);
     try {
       const res = await fetch("/api/admin/parse-food", {
         method: "POST",
@@ -38,12 +39,12 @@ export default function AdminParsePage() {
     } catch (error: any) {
       toast.error(error.message || "Đã có lỗi xảy ra");
     } finally {
-      setLoading(false);
+      setLoadingParse(false);
     }
   };
 
   const handleSave = async () => {
-    setLoading(true);
+    setLoadingSave(true);
     try {
       const res = await fetch("/api/admin/foods", {
         method: "POST",
@@ -66,7 +67,7 @@ export default function AdminParsePage() {
     } catch (error: any) {
       toast.error(error.message || "Lỗi khi lưu dữ liệu");
     } finally {
-      setLoading(false);
+      setLoadingSave(false);
     }
   };
 
@@ -81,8 +82,8 @@ export default function AdminParsePage() {
         className="min-h-[120px]"
       />
 
-      <SketchyButton onClick={handleParse} disabled={loading || !text}>
-        {loading ? "Đang phân tích..." : "Phân tích"}
+      <SketchyButton onClick={handleParse} disabled={loadingParse || !text}>
+        {loadingParse ? "Đang phân tích..." : "Phân tích"}
       </SketchyButton>
 
       {result.length > 0 && (
@@ -101,8 +102,8 @@ export default function AdminParsePage() {
             ))}
           </div>
 
-          <SketchyButton onClick={handleSave} disabled={loading}>
-            {loading ? "Đang lưu..." : "Lưu"}
+          <SketchyButton onClick={handleSave} disabled={loadingSave}>
+            {loadingSave ? "Đang lưu..." : "Lưu"}
           </SketchyButton>
         </>
       )}
