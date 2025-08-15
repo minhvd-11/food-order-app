@@ -57,11 +57,7 @@ export default function AccountForm({ user }: { user: User }) {
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
-      <Avatar
-        avatarUrl={avatarUrl}
-        onUpload={(url) => setAvatarUrl(url)}
-        size={120}
-      />
+      <Avatar avatarUrl={avatarUrl} size={120} />
 
       <div>
         <label className="block text-sm font-medium mb-1">Email</label>

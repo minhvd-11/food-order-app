@@ -6,6 +6,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { Food, User } from "@/types";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Home() {
   const {
@@ -19,6 +20,8 @@ export default function Home() {
     note,
     setNote,
   } = useCartStore();
+
+  const { userMetadata } = useUser();
 
   const [foods, setFoods] = useState<Food[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -47,6 +50,16 @@ export default function Home() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (userMetadata?.email && users.length > 0 && !guestName) {
+      const matchedUser = users.find((u) => u.email === userMetadata.email);
+      if (matchedUser) {
+        setGuestName(matchedUser.name);
+        setShortName(matchedUser.shortName || "");
+      }
+    }
+  }, [userMetadata?.email, users, guestName, setGuestName, setShortName]);
 
   return (
     <main className="p-6 space-y-6">

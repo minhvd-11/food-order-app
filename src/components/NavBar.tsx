@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
-import { UserMetadata } from "@supabase/supabase-js";
+import { useUser } from "@/contexts/UserContext";
 
 const navLinks = [
   { href: "/admin/orders", label: "Quản lý đơn" },
@@ -15,17 +14,8 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const { userMetadata, loading } = useUser();
   const pathname = usePathname();
-  const [userMetadata, setUserMetadata] = useState<UserMetadata>();
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (user && user.user_metadata) {
-        setUserMetadata(user.user_metadata);
-      } else console.log(error);
-    });
-  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -36,7 +26,6 @@ export function Navbar() {
   return (
     <nav className="w-full bg-white border-b shadow-sm mb-6">
       <div className="max-w-5xl mx-auto px-4 py-3 flex gap-6 items-center justify-between">
-        {/* Logo */}
         <Link href="/">
           <Image
             src="/logo/DL_logo_full.svg"
@@ -46,7 +35,6 @@ export function Navbar() {
           />
         </Link>
 
-        {/* Navigation Links */}
         <div className="flex gap-6">
           {navLinks.map((link) => (
             <Link
@@ -64,11 +52,10 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* Auth Section */}
         <div className="flex items-center gap-3">
-          {userMetadata ? (
+          {loading ? null : userMetadata ? (
             <>
-              <Link href="/account" className="text-sm text-gray-700">
+              <Link href="/account">
                 <Image
                   src={
                     userMetadata.avatar_url || "/public/logo.Dailylunchlogo.png"
