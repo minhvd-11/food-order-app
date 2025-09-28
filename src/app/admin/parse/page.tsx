@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Textarea, Card, Button } from "@/components/ui";
+import { Textarea, Card, Input } from "@/components/ui";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SketchyButton } from "@/components";
@@ -11,7 +11,12 @@ export default function AdminParsePage() {
   const [text, setText] = useState("");
   const [loadingParse, setLoadingParse] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
+  const [announcing, setAnnouncing] = useState(false);
   const [result, setResult] = useState<Food[]>([]);
+  const [saved, setSaved] = useState(false);
+  const [savedFoods, setSavedFoods] = useState<string[]>([]);
+  const [savedDate, setSavedDate] = useState<string | null>(null);
+  const [savedTime, setSaveTime] = useState<string>("11h10");
 
   const handleParse = async () => {
     setLoadingParse(true);
@@ -35,6 +40,9 @@ export default function AdminParsePage() {
       );
 
       setResult(foodsWithId);
+      setSaved(false); // reset saved status after new parse
+      setSavedFoods([]);
+      setSavedDate(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || "Đã có lỗi xảy ra");
@@ -46,24 +54,28 @@ export default function AdminParsePage() {
   const handleSave = async () => {
     setLoadingSave(true);
     try {
+      const payload = {
+        foods: result.map((item) => item.name),
+        date: new Date().toISOString(),
+      };
+
       const res = await fetch("/api/admin/foods", {
         method: "POST",
-        body: JSON.stringify({
-          foods: result.map((item) => item.name),
-          date: new Date().toISOString(),
-        }),
+        body: JSON.stringify(payload),
         headers: {
           "Content-Type": "application/json",
         },
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         throw new Error(data.error || "Lỗi khi lưu dữ liệu");
       }
 
       toast.success("Đã lưu danh sách món ăn cho ngày hôm nay");
+      setSaved(true);
+      setSavedFoods(payload.foods);
+      setSavedDate(payload.date);
     } catch (error: any) {
       toast.error(error.message || "Lỗi khi lưu dữ liệu");
     } finally {
@@ -71,8 +83,41 @@ export default function AdminParsePage() {
     }
   };
 
+  const handleAnnounce = async () => {
+    if (!saved || savedFoods.length === 0) {
+      toast.error("Chưa có danh sách đã lưu để thông báo");
+      return;
+    }
+
+    setAnnouncing(true);
+    try {
+      const res = await fetch("/api/admin/announce", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: savedDate,
+          foods: savedFoods,
+          time: savedTime,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Lỗi khi gọi Slack workflow");
+      }
+
+      toast.success("Đã gửi thông báo tới Slack");
+    } catch (error: any) {
+      toast.error(error.message || "Lỗi khi gửi thông báo");
+    } finally {
+      setAnnouncing(false);
+    }
+  };
+
   return (
-    <main className="p-6 space-y-6">
+    <main className="p-6 mb-12 space-y-6">
       <h1 className="text-2xl font-bold">📋 Phân tích danh sách món ăn</h1>
 
       <Textarea
@@ -102,9 +147,30 @@ export default function AdminParsePage() {
             ))}
           </div>
 
-          <SketchyButton onClick={handleSave} disabled={loadingSave}>
-            {loadingSave ? "Đang lưu..." : "Lưu"}
-          </SketchyButton>
+          <div className="flex gap-3 items-center">
+            <SketchyButton onClick={handleSave} disabled={loadingSave}>
+              {loadingSave ? "Đang lưu..." : "Lưu"}
+            </SketchyButton>
+
+            <SketchyButton
+              onClick={handleAnnounce}
+              disabled={!saved || announcing}
+            >
+              {announcing ? "Đang gửi..." : "Thông báo"}
+            </SketchyButton>
+
+            {
+              <Input
+                placeholder="Thời gian chốt"
+                type="text"
+                value={savedTime}
+                onChange={(e) => setSaveTime(e.target.value)}
+                className="max-w-24"
+              />
+            }
+
+            {saved && <span className="text-sm text-green-600">Đã lưu</span>}
+          </div>
         </>
       )}
     </main>

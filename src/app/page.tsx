@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { SketchyButton, TodayOrderModal } from "@/components";
 import { useCartStore } from "@/store/useCartStore";
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { Food, User } from "@/types";
 import { useUser } from "@/contexts/UserContext";
@@ -148,14 +148,22 @@ export default function Home() {
 
         {!!foods.length && (
           <div className="mt-6">
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-2">
               📝 Ghi chú thêm:
             </label>
+            <Button
+              onClick={() => setNote(!note ? "thêm lạc" : note + ", thêm lạc")}
+              variant="outline"
+              size="sm"
+            >
+              Thêm lạc
+            </Button>
             <textarea
+              name="note-text-box"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="VD: Thêm ớt, thêm cà, ..."
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md my-3"
               rows={3}
             />
           </div>
