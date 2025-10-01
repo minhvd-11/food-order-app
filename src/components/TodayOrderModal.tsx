@@ -75,7 +75,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
           <p>Chưa có đơn đặt nào hôm nay.</p>
         ) : (
           <>
-            <ul className="space-y-3 mb-4">
+            <ul className="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2">
               {orders.map((o) => (
                 <li
                   key={o.id}

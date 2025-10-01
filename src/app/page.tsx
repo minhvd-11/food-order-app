@@ -155,6 +155,7 @@ export default function Home() {
               onClick={() => setNote(!note ? "thêm lạc" : note + ", thêm lạc")}
               variant="outline"
               size="sm"
+              className="hover:bg-black hover:text-white"
             >
               Thêm lạc
             </Button>
