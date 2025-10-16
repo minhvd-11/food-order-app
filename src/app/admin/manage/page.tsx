@@ -6,6 +6,7 @@ import { format } from "date-fns";
 type SummaryItem = {
   userId: string;
   userName: string;
+  userShortName: string;
   count: number;
   money: number;
 };
@@ -61,7 +62,9 @@ export default function AdminManagePage() {
           <tbody>
             {summary.map((row) => (
               <tr key={row.userId}>
-                <td className="border p-2">{row.userName}</td>
+                <td className="border p-2">
+                  {row.userName} ({row.userShortName})
+                </td>
                 <td className="border p-2 text-center">{row.count}</td>
                 <td className="border p-2 text-right">
                   {row.money.toLocaleString("vi-VN")}

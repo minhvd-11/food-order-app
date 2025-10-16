@@ -22,13 +22,16 @@ export async function GET(req: NextRequest) {
 
     const users = await prisma.user.findMany({
       where: { id: { in: grouped.map((g) => g.userId) } },
-      select: { id: true, name: true },
+      select: { id: true, name: true, shortName: true },
     });
-    const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]));
+    const userMap = Object.fromEntries(
+      users.map((u) => [u.id, { name: u.name, shortName: u.shortName }])
+    );
 
     const summary = grouped.map((g) => ({
       userId: g.userId,
-      userName: userMap[g.userId] || "Unknown",
+      userName: userMap[g.userId]?.name || "Unknown",
+      userShortName: userMap[g.userId]?.shortName || "Unknown",
       count: g._count.id,
       money: g._count.id * 30000,
     }));

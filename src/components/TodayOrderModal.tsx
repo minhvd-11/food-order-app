@@ -82,8 +82,10 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
                   className="border rounded p-3 bg-gray-50 shadow-sm text-sm flex justify-between items-start gap-3"
                 >
                   <div>
-                    <strong>{o.userName}</strong>:{" "}
-                    {o.foodNames?.join(", ") || ""}
+                    <strong>
+                      {o.userName} ({o.userShortName})
+                    </strong>
+                    : {o.foodNames?.join(", ") || ""}
                     {o.note?.trim() && (
                       <span className="text-gray-700"> ({o.note})</span>
                     )}
