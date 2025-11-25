@@ -41,6 +41,7 @@ model Order {
   createdAt DateTime    @default(now())
   date      DateTime
   note      String?
+  price     Int         @default(30000)
   user      User        @relation(fields: [userId], references: [id])
   items     OrderItem[]
 }

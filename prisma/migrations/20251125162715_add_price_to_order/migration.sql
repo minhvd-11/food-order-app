@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Order" ADD COLUMN     "price" INTEGER NOT NULL DEFAULT 30000;
