@@ -192,12 +192,19 @@ export default function Home() {
               return (
                 <Card
                   key={food.id}
-                  onClick={() => toggleItem(food)}
+                  onClick={() => {
+                    if (orderPrice !== 10000) {
+                      toggleItem(food);
+                    }
+                  }}
                   className={cn(
-                    "cursor-pointer border p-4 rounded-xl shadow-sm transition-all duration-150 hover:shadow-md active:scale-[0.98]",
-                    isSelected
+                    "border p-4 rounded-xl shadow-sm transition-all duration-150",
+                    orderPrice !== 10000
+                      ? "cursor-pointer hover:shadow-md active:scale-[0.98] hover:border-gray-400"
+                      : "cursor-not-allowed opacity-60",
+                    isSelected && orderPrice !== 10000
                       ? "border-green-500 bg-green-100 text-green-900"
-                      : "border-gray-200 hover:border-gray-400"
+                      : "border-gray-200"
                   )}
                 >
                   <p className="text-base font-medium">{food.name}</p>
@@ -232,25 +239,24 @@ export default function Home() {
         )}
 
         {/* Selected Summary & Submit */}
-        {selectedItems.length > 0 ||
-          (orderPrice === 10000 && (
-            <div className="mt-8 p-4 border-t">
-              <h2 className="text-lg font-semibold mb-2">🛒 Món đã chọn:</h2>
-              <ul className="list-disc list-inside space-y-1 mb-4">
-                {selectedItems.map((item) => (
-                  <li key={item.id} className="text-gray-800">
-                    {item.name}
-                  </li>
-                ))}
-              </ul>
-              <h2 className="text-lg font-semibold mb-2">
-                Đơn giá: {orderPrice} VNĐ
-              </h2>
-              <SketchyButton onClick={submitOrder} disabled={submitLoading}>
-                {submitLoading ? "Đang lưu..." : "Lưu đơn"}
-              </SketchyButton>
-            </div>
-          ))}
+        {(selectedItems.length > 0 || orderPrice === 10000) && (
+          <div className="mt-8 p-4 border-t">
+            <h2 className="text-lg font-semibold mb-2">🛒 Món đã chọn:</h2>
+            <ul className="list-disc list-inside space-y-1 mb-4">
+              {selectedItems.map((item) => (
+                <li key={item.id} className="text-gray-800">
+                  {item.name}
+                </li>
+              ))}
+            </ul>
+            <h2 className="text-lg font-semibold mb-2">
+              Đơn giá: {orderPrice} VNĐ
+            </h2>
+            <SketchyButton onClick={submitOrder} disabled={submitLoading}>
+              {submitLoading ? "Đang lưu..." : "Lưu đơn"}
+            </SketchyButton>
+          </div>
+        )}
       </div>
     </main>
   );
