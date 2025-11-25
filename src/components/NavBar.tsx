@@ -8,9 +8,9 @@ import Image from "next/image";
 import { useUser } from "@/contexts/UserContext";
 
 const navLinks = [
-  { href: "/admin/orders", label: "Quản lý đơn" },
-  { href: "/admin/parse", label: "Tạo danh sách" },
-  { href: "/admin/manage", label: "Quản trị" },
+  { href: "/admin/orders", label: "Tra cứu đơn" },
+  { href: "/admin/parse", label: "Tạo thực đơn" },
+  { href: "/admin/manage", label: "Thống kê đơn" },
 ];
 
 export function Navbar() {

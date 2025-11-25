@@ -58,3 +58,15 @@ export interface FoodOrder {
   note?: string;
   date: string;
 }
+
+export enum OrderPriceTierType {
+  NO_TOPPING_PRICE = "NO_TOPPING_PRICE",
+  BASIC_PRICE = "BASIC_PRICE",
+  EXTRA_PLUS_PRICE = "EXTRA_PLUS_PRICE",
+  PROMAX_PRICE = "PROMAX_PRICE",
+}
+export interface OrderPrice {
+  priceTier: OrderPriceTierType;
+  label: string;
+  value: number;
+}

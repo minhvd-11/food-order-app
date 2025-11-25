@@ -7,10 +7,16 @@ type OrderRequest = {
   shortName?: string;
   foodIds: string[];
   note?: string;
+  price?: number;
 };
 
+const BASE_PRICE = 30000;
+
 export async function POST(req: Request) {
-  const { name, shortName, foodIds, note }: OrderRequest = await req.json();
+  const { name, shortName, foodIds, note, price }: OrderRequest =
+    await req.json();
+
+  const finalPrice = price ?? BASE_PRICE;
 
   if (!name || !Array.isArray(foodIds) || foodIds.length === 0) {
     return NextResponse.json(
@@ -53,11 +59,13 @@ export async function POST(req: Request) {
     data: {
       userId: user.id,
       note,
+      price: finalPrice,
       date: today,
       items: {
         create: foodIds.map((foodId) => ({ foodId })),
       },
     },
+    include: { items: true },
   });
 
   return NextResponse.json({

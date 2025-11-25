@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
         userShortName: o.user.shortName,
         userName: o.user.name,
         foodNames: o.items.map((i) => i.food.name),
+        price: o.price,
       })),
     });
   }
@@ -94,6 +95,7 @@ export async function GET(req: NextRequest) {
       userShortName: o.user.shortName,
       userName: o.user.name,
       foodNames: o.items.map((i) => i.food.name),
+      price: o.price,
     })),
   });
 }

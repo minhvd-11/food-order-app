@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
       date: o.date,
       id: o.id,
       note: o.note,
+      price: o.price,
     }));
 
     return NextResponse.json({ groupBy: "user", data: grouped });
@@ -50,6 +51,7 @@ export async function GET(req: NextRequest) {
           foodNames: o.items.map((i) => i.food.name),
           id: o.id,
           note: o.note,
+          price: o.price,
         })),
       },
     ];

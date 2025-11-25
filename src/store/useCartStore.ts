@@ -10,9 +10,11 @@ interface CartStore {
   guestName: string;
   shortName: string;
   note?: string;
+  orderPrice?: number;
   setGuestName: (name: string) => void;
   setShortName: (short: string) => void;
   setNote: (note?: string) => void;
+  setOrderPrice: (orderPrice: number) => void;
   selectedItems: FoodItem[];
   toggleItem: (item: FoodItem) => void;
   submitOrder: () => void;
@@ -36,9 +38,14 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
   loading: false,
   setNote: (val?: string) => set({ note: val }),
+  orderPrice: 30000,
+  setOrderPrice: (val?: number) => set({ orderPrice: val }),
 
   submitOrder: async () => {
-    const { guestName, shortName, selectedItems, note } = get();
+    const { guestName, shortName, selectedItems, note, orderPrice } = get();
+
+    const orderNote =
+      orderPrice === 30000 ? note : note + ` suất ${orderPrice}đ`;
 
     if (!guestName.trim() || !shortName.trim()) {
       toast.warning("Vui lòng chọn tên hoặc nhập tên mới!");
@@ -63,6 +70,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
           shortName,
           note,
           foodIds: selectedItems.map((item) => item.id),
+          price: orderPrice,
         }),
       });
 
