@@ -5,7 +5,7 @@ import { startOfDay } from "date-fns";
 type OrderRequest = {
   name: string;
   shortName?: string;
-  foodIds: string[];
+  foodIds?: string[];
   note?: string;
   price?: number;
 };
@@ -18,7 +18,10 @@ export async function POST(req: Request) {
 
   const finalPrice = price ?? BASE_PRICE;
 
-  if (!name || !Array.isArray(foodIds) || foodIds.length === 0) {
+  if (
+    (!name || !Array.isArray(foodIds) || foodIds.length === 0) &&
+    price !== 10000
+  ) {
     return NextResponse.json(
       { message: "Thiếu tên hoặc món ăn" },
       { status: 400 }
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
       price: finalPrice,
       date: today,
       items: {
-        create: foodIds.map((foodId) => ({ foodId })),
+        create: foodIds?.map((foodId) => ({ foodId })),
       },
     },
     include: { items: true },

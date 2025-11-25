@@ -39,6 +39,7 @@ export interface Order {
   user?: User;
   items?: OrderItem[];
   note: string;
+  price?: number;
 }
 
 // OrderItem.ts
@@ -57,6 +58,7 @@ export interface FoodOrder {
   foodNames: string[];
   note?: string;
   date: string;
+  price?: number;
 }
 
 export enum OrderPriceTierType {

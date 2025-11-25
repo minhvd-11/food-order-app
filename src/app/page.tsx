@@ -169,7 +169,9 @@ export default function Home() {
                     </h3>
                   </div>
 
-                  <p className="text-slate-600 text-sm">{option.value} VNĐ</p>
+                  <p className="text-slate-600 text-sm">
+                    {option.value.toLocaleString()} đ
+                  </p>
                 </div>
               </button>
             );
@@ -250,7 +252,7 @@ export default function Home() {
               ))}
             </ul>
             <h2 className="text-lg font-semibold mb-2">
-              Đơn giá: {orderPrice} VNĐ
+              Đơn giá: {orderPrice?.toLocaleString()} đ
             </h2>
             <SketchyButton onClick={submitOrder} disabled={submitLoading}>
               {submitLoading ? "Đang lưu..." : "Lưu đơn"}

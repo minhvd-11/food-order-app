@@ -45,14 +45,18 @@ export const useCartStore = create<CartStore>((set, get) => ({
     const { guestName, shortName, selectedItems, note, orderPrice } = get();
 
     const orderNote =
-      orderPrice === 30000 ? note : note + ` suất ${orderPrice}đ`;
+      orderPrice === 10000
+        ? "Cơm 10k"
+        : orderPrice === 30000
+        ? note
+        : note + ` suất ${orderPrice}đ`;
 
     if (!guestName.trim() || !shortName.trim()) {
       toast.warning("Vui lòng chọn tên hoặc nhập tên mới!");
       return;
     }
 
-    if (selectedItems.length === 0) {
+    if (selectedItems.length === 0 && orderPrice !== 10000) {
       toast.warning("Vui lòng chọn ít nhất 1 món!");
       return;
     }
@@ -68,7 +72,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         body: JSON.stringify({
           name: guestName,
           shortName,
-          note,
+          note: orderNote,
           foodIds: selectedItems.map((item) => item.id),
           price: orderPrice,
         }),

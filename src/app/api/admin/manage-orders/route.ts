@@ -18,12 +18,15 @@ export async function GET(req: NextRequest) {
       by: ["userId"],
       where: { date: { gte: start, lte: end } },
       _count: { id: true },
+      _sum: { price: true },
     });
 
+    const userIds = grouped.map((g) => g.userId).filter(Boolean);
     const users = await prisma.user.findMany({
-      where: { id: { in: grouped.map((g) => g.userId) } },
+      where: { id: { in: userIds } },
       select: { id: true, name: true, shortName: true },
     });
+
     const userMap = Object.fromEntries(
       users.map((u) => [u.id, { name: u.name, shortName: u.shortName }])
     );
@@ -33,7 +36,7 @@ export async function GET(req: NextRequest) {
       userName: userMap[g.userId]?.name || "Unknown",
       userShortName: userMap[g.userId]?.shortName || "Unknown",
       count: g._count.id,
-      money: g._count.id * 30000,
+      money: g._sum.price ?? 0, // Real total amount (handles null if no orders, but shouldn't happen)
     }));
 
     // Sort by count descending

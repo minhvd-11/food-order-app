@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { FoodOrder, User } from "@/types";
 
@@ -40,7 +40,9 @@ export default function UserOrderStats({ userId }: { userId: string }) {
   }, [userId]);
 
   const orderedDays = orders.length;
-  const totalMoney = orders.length * 30000;
+  const totalPrice = useMemo(() => {
+    return orders.reduce((sum, order) => sum + (order.price ?? 0), 0);
+  }, [orders]);
 
   return (
     <div className="bg-white shadow rounded-lg p-6 w-full max-w-2xl">
@@ -58,7 +60,7 @@ export default function UserOrderStats({ userId }: { userId: string }) {
         <div>
           <p className="text-sm text-gray-500">Tổng tiền</p>
           <p className="font-medium text-green-600">
-            {totalMoney.toLocaleString()} đ
+            {totalPrice.toLocaleString()} đ
           </p>
         </div>
       </div>
