@@ -44,19 +44,20 @@ export const useCartStore = create<CartStore>((set, get) => ({
   submitOrder: async () => {
     const { guestName, shortName, selectedItems, note, orderPrice } = get();
 
-    const orderNote =
-      orderPrice === 10000
-        ? "Cơm 10k"
-        : orderPrice === 30000
-        ? note
-        : note + ` suất ${orderPrice}đ`;
+    const isNoToppingOrder = orderPrice === 10000;
+
+    const orderNote = isNoToppingOrder
+      ? "Cơm 10k"
+      : orderPrice === 30000
+      ? note
+      : note + ` suất ${orderPrice}đ`;
 
     if (!guestName.trim() || !shortName.trim()) {
       toast.warning("Vui lòng chọn tên hoặc nhập tên mới!");
       return;
     }
 
-    if (selectedItems.length === 0 && orderPrice !== 10000) {
+    if (selectedItems.length === 0 && isNoToppingOrder) {
       toast.warning("Vui lòng chọn ít nhất 1 món!");
       return;
     }
@@ -73,7 +74,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
           name: guestName,
           shortName,
           note: orderNote,
-          foodIds: selectedItems.map((item) => item.id),
+          foodIds: isNoToppingOrder
+            ? undefined
+            : selectedItems.map((item) => item.id),
           price: orderPrice,
         }),
       });

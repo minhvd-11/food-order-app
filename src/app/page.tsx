@@ -53,6 +53,8 @@ export default function Home() {
     },
   ];
 
+  const isNoToppingOrder = orderPrice === 10000;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -241,16 +243,21 @@ export default function Home() {
         )}
 
         {/* Selected Summary & Submit */}
-        {(selectedItems.length > 0 || orderPrice === 10000) && (
+        {(selectedItems.length > 0 || isNoToppingOrder) && (
           <div className="mt-8 p-4 border-t">
             <h2 className="text-lg font-semibold mb-2">🛒 Món đã chọn:</h2>
-            <ul className="list-disc list-inside space-y-1 mb-4">
-              {selectedItems.map((item) => (
-                <li key={item.id} className="text-gray-800">
-                  {item.name}
-                </li>
-              ))}
-            </ul>
+            {isNoToppingOrder ? (
+              <span>Cơm 10k</span>
+            ) : (
+              <ul className="list-disc list-inside space-y-1 mb-4">
+                {selectedItems.map((item) => (
+                  <li key={item.id} className="text-gray-800">
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <h2 className="text-lg font-semibold mb-2">
               Đơn giá: {orderPrice?.toLocaleString()} đ
             </h2>
