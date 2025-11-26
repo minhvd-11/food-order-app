@@ -57,7 +57,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
       return;
     }
 
-    if (selectedItems.length === 0 && isNoToppingOrder) {
+    if (selectedItems.length === 0 && !isNoToppingOrder) {
       toast.warning("Vui lòng chọn ít nhất 1 món!");
       return;
     }

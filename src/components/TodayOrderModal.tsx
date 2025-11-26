@@ -59,7 +59,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-lg w-full p-6 relative">
+      <div className="bg-white rounded-lg max-w-2xl w-full p-6 relative">
         <h2 className="text-xl font-bold mb-4">🗓️ Đơn đặt hôm nay</h2>
 
         <button
@@ -75,7 +75,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
           <p>Chưa có đơn đặt nào hôm nay.</p>
         ) : (
           <>
-            <ul className="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2">
+            <ul className="space-y-3 mb-4 max-h-100 overflow-y-auto pr-2">
               {orders.map((o) => (
                 <li
                   key={o.id}
@@ -84,6 +84,14 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
                   <div>
                     <strong>
                       {o.userName} ({o.userShortName})
+                      {!!o.price && (
+                        <span>
+                          {` - `}
+                          <span className="text-lime-500">
+                            {o.price / 1000}k
+                          </span>
+                        </span>
+                      )}
                     </strong>
                     : {o.foodNames?.join(", ") || ""}
                     {o.note?.trim() && (

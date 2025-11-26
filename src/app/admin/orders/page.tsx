@@ -7,6 +7,8 @@ type AdminOrder = {
   userName: string;
   date: string;
   foodNames: string[];
+  note?: string;
+  price?: number;
 };
 
 export default function AdminPage() {
@@ -105,7 +107,10 @@ export default function AdminPage() {
                   <span className="font-medium">{order.userName}</span>
                 )}
               </div>
-              <div className="mt-2">🍽️ {order.foodNames.join(", ")}</div>
+              <div className="mt-2">
+                🍽️ {!!order.price && `${order.price / 1000}k - `}{" "}
+                {order.foodNames.join(", ")} {!!order.note && `(${order.note})`}
+              </div>
             </div>
           ))}
         </div>

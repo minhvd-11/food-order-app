@@ -53,6 +53,8 @@ export default function Home() {
     },
   ];
 
+  const noteOptions = ["thêm lạc", "nhiều cơm", "ít cơm", "thêm cà"];
+
   const isNoToppingOrder = orderPrice === 10000;
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export default function Home() {
           {showModal && <TodayOrderModal onClose={() => setShowModal(false)} />}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 my-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
           {priceOptions.map((option) => {
             const isSelected = option.value === orderPrice;
 
@@ -223,14 +225,20 @@ export default function Home() {
             <label className="block text-sm font-medium mb-2">
               📝 Ghi chú thêm:
             </label>
-            <Button
-              onClick={() => setNote(!note ? "thêm lạc" : note + ", thêm lạc")}
-              variant="outline"
-              size="sm"
-              className="hover:bg-black hover:text-white"
-            >
-              Thêm lạc
-            </Button>
+            {noteOptions.map((opt, index) => {
+              return (
+                <Button
+                  key={index}
+                  onClick={() => setNote(!note ? opt : note + `, ${opt}`)}
+                  variant="outline"
+                  size="sm"
+                  className="hover:bg-black hover:text-white"
+                >
+                  {opt}
+                </Button>
+              );
+            })}
+
             <textarea
               name="note-text-box"
               value={note}
