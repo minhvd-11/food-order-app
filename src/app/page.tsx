@@ -232,7 +232,7 @@ export default function Home() {
                   onClick={() => setNote(!note ? opt : note + `, ${opt}`)}
                   variant="outline"
                   size="sm"
-                  className="hover:bg-black hover:text-white mx-4"
+                  className="hover:bg-black hover:text-white mr-2"
                 >
                   {opt}
                 </Button>
