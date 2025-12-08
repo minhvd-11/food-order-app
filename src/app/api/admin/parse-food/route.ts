@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`;
+const GEMINI_API_URL = process.env.GEMINI_API_URL;
 
 export async function POST(req: Request) {
   try {
@@ -14,9 +14,13 @@ export async function POST(req: Request) {
     const prompt = `
       Đây là đoạn văn bản có chứa các món ăn bằng tiếng Việt:
       "${text}"
-      Loại bỏ các từ ngữ thừa không phải món ăn, sửa lỗi chính tả không tự sửa đổi thành món ăn khác, đảm bảo giữ nguyên số món ăn và trích xuất từng món thành mảng JSON có dạng:
+      Nhiệm vụ:
+      1. Loại bỏ các từ ngữ thừa không phải món ăn.
+      2. Sửa lỗi chính tả (nhưng không thay đổi món ăn thành món khác).
+      3. Trích xuất từng món thành mảng JSON objects.
+      
+      Output format:
       [{ "name": "tên món" }]
-      Chỉ trả về JSON, không giải thích gì thêm.
     `;
 
     const geminiRes = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
@@ -30,11 +34,25 @@ export async function POST(req: Request) {
             parts: [{ text: prompt }],
           },
         ],
+        // CONFIGURATION: Force JSON response
+        generationConfig: {
+          responseMimeType: "application/json",
+        },
       }),
     });
 
     if (!geminiRes.ok) {
       const errorBody = await geminiRes.text();
+
+      // Check specifically for the 429 error
+      if (geminiRes.status === 429) {
+        console.error("Gemini Quota Exceeded:", errorBody);
+        return NextResponse.json(
+          { error: "Server đang quá tải, vui lòng thử lại sau 30 giây." },
+          { status: 429 }
+        );
+      }
+
       console.error("Gemini API error:", geminiRes.status, errorBody);
       return NextResponse.json(
         { error: "Gemini API request failed" },
@@ -43,9 +61,8 @@ export async function POST(req: Request) {
     }
 
     const geminiData = await geminiRes.json();
+    const textOutput = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    const textOutput =
-      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!textOutput) {
       return NextResponse.json(
         { error: "Không nhận được phản hồi từ AI" },
@@ -53,12 +70,18 @@ export async function POST(req: Request) {
       );
     }
 
-    // Extract and parse the JSON from the response
-    const cleaned = textOutput.replace(/^```json\n/, "").replace(/\n```$/, "");
-    const foods = JSON.parse(cleaned);
+    let foods;
+    try {
+      foods = JSON.parse(textOutput);
+    } catch (e) {
+      console.error("JSON Parse Error:", textOutput);
+      return NextResponse.json(
+        { error: "Lỗi định dạng dữ liệu từ AI" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ foods });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.error("Lỗi phân tích AI:", err.message || err);
     return NextResponse.json(
