@@ -6,3 +6,4 @@ export * from "@/components/PageTransition";
 export * from "@/components/UserOrderInfo";
 export * from "@/components/BackgroundDecorations";
 export * from "@/components/OrderSelection";
+export * from "@/components/GradientText";

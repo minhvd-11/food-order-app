@@ -1,6 +1,7 @@
 "use client";
 
 import { BackgroundDecorations, OrderSelection } from "@/components";
+import GradientText from "@/components/GradientText";
 
 export default function Home() {
   return (
@@ -15,9 +16,14 @@ export default function Home() {
               Chúc Mừng Năm Mới
             </span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-black mb-4 text-red-800 tracking-tight">
+          <GradientText
+            colors={["#740A03", "#E6501B", "#C3110C"]}
+            animationSpeed={8}
+            showBorder={false}
+            className="text-5xl md:text-6xl font-black mb-4 tracking-tight"
+          >
             Teko Daily Lunch
-          </h1>
+          </GradientText>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg">
             Chào mừng Xuân Bính Ngọ 2026. Cùng đón chào năm mới an khang thịnh
             vượng!
