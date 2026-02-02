@@ -4,3 +4,5 @@ export * from "@/components/EditOrderModal";
 export * from "@/components/SketchyButton";
 export * from "@/components/PageTransition";
 export * from "@/components/UserOrderInfo";
+export * from "@/components/BackgroundDecorations";
+export * from "@/components/OrderSelection";
