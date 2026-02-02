@@ -35,15 +35,20 @@ export function Navbar() {
   };
 
   return (
-    <nav className="relative w-full bg-white border-b shadow-sm mb-6">
+    <nav className="relative w-full bg-white/90 backdrop-blur-sm border-b border-red-100 sticky top-0 z-50 shadow-sm">
       <div className="max-w-5xl mx-auto px-4 py-3 flex gap-6 items-center justify-between">
         <Link href="/" className="hidden sm:inline">
-          <Image
-            src="/logo/DL_logo_full.svg"
-            alt="Logo"
-            width={40}
-            height={40}
-          />
+          <div className="flex items-center gap-2">
+            <Image
+              src="/logo/DL_logo_full.svg"
+              alt="Logo"
+              width={40}
+              height={40}
+            />
+            <span className="hidden sm:block text-xl font-bold bg-gradient-to-r from-red-700 to-red-500 bg-clip-text text-transparent">
+              Daily Lunch
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
@@ -53,9 +58,9 @@ export function Navbar() {
               key={link.href}
               href={link.href}
               className={clsx(
-                "text-sm font-medium hover:text-blue-600",
+                "text-sm font-medium hover:text-red-600 transition-colors",
                 pathname === link.href
-                  ? "text-blue-600 underline"
+                  ? "hover:text-red-600 underline"
                   : "text-gray-700",
               )}
             >
@@ -69,6 +74,7 @@ export function Navbar() {
 
         {/* Mobile Menu Button */}
         <button
+          type="button"
           className="md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
@@ -78,7 +84,10 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           {loading ? null : userMetadata ? (
             <>
-              <Link href="/account" className="flex gap-2 items-center">
+              <Link
+                href="/account"
+                className="flex gap-2 items-center border-r border-gray-200 gap-3 pr-4"
+              >
                 <Image
                   src={
                     userMetadata.avatar_url || "/public/logo.Dailylunchlogo.png"
@@ -93,8 +102,9 @@ export function Navbar() {
                 </span>
               </Link>
               <button
+                type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all text-sm font-medium cursor-pointer"
               >
                 <LogOut size={16} />
                 <span className="hidden sm:inline">Đăng xuất</span>
@@ -103,7 +113,7 @@ export function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 transition-all text-sm font-medium"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 text-green-600 hover:bg-green-50 transition-all text-sm font-medium cursor-pointer"
             >
               <span>Đăng nhập</span>
             </Link>
@@ -114,7 +124,7 @@ export function Navbar() {
       {mobileOpen && (
         <div
           className={clsx(
-            "absolute top-full left-0 w-full bg-white shadow-md border-t z-50 md:hidden transition-all duration-200 origin-top",
+            "absolute top-full left-0 w-full bg-white/99 backdrop-blur-sm shadow-sm border-t z-50 md:hidden transition-all duration-200 origin-top",
             mobileOpen
               ? "opacity-100 scale-y-100"
               : "opacity-0 scale-y-95 pointer-events-none",
