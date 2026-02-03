@@ -36,7 +36,7 @@ export default function AdminParsePage() {
         (food: { name: string }, index: number) => ({
           id: index,
           name: food.name,
-        })
+        }),
       );
 
       setResult(foodsWithId);
@@ -139,7 +139,7 @@ export default function AdminParsePage() {
               <Card
                 key={food.id}
                 className={cn(
-                  "border p-4 rounded-xl transition-all border-gray-200 hover:border-gray-400"
+                  "border p-4 rounded-xl transition-all border-gray-200 hover:border-gray-400",
                 )}
               >
                 <p className="text-base font-medium">{food.name}</p>
