@@ -13,14 +13,14 @@ type SummaryItem = {
 
 export default function AdminManagePage() {
   const [selectedMonth, setSelectedMonth] = useState(() =>
-    format(new Date(), "yyyy-MM")
+    format(new Date(), "yyyy-MM"),
   );
   const [summary, setSummary] = useState<SummaryItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchSummary = async (month: string) => {
     setLoading(true);
-    const res = await fetch(`/api/admin/manage-orders?month=${month}`);
+    const res = await fetch(`/api/orders/manage-orders?month=${month}`);
     const data = await res.json();
     setSummary(data.summary || []);
     setLoading(false);

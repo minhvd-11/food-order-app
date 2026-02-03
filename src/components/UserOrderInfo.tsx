@@ -29,7 +29,7 @@ export default function UserOrderStats({ userId }: { userId: string }) {
       const month = format(now, "yyyy-MM");
 
       const res = await fetch(
-        `/api/admin/manage-orders?userId=${userId}&month=${month}`
+        `/api/orders/manage-orders?userId=${userId}&month=${month}`,
       );
       const data = await res.json();
       setOrders(data.orders || []);
