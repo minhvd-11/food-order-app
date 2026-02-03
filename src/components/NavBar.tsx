@@ -9,10 +9,10 @@ import { useUser } from "@/contexts/UserContext";
 import { BarChart2, FilePlus, LogOut, Search, Menu, X } from "lucide-react";
 
 const navLinks = [
-  { href: "/orders", label: "Tra cứu đơn", icon: <Search size={18} /> },
+  { href: "/admin/orders", label: "Tra cứu đơn", icon: <Search size={18} /> },
   { href: "/admin/parse", label: "Tạo thực đơn", icon: <FilePlus size={18} /> },
   {
-    href: "/manage",
+    href: "/admin/manage",
     label: "Thống kê đơn",
     icon: <BarChart2 size={18} />,
   },

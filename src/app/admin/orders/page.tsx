@@ -22,7 +22,7 @@ export default function AdminPage() {
   // Fetch filter options when groupBy changes
   useEffect(() => {
     const fetchFilters = async () => {
-      const res = await fetch(`/api/orders/filters?groupBy=${groupBy}`);
+      const res = await fetch(`/api/admin/filters?groupBy=${groupBy}`);
       const data = await res.json();
       setFilterOptions(data.options);
       setFilterValue(data.options[0] ?? "");
@@ -36,9 +36,9 @@ export default function AdminPage() {
 
     setLoading(true);
     fetch(
-      `/api/orders/orders?groupBy=${groupBy}&value=${encodeURIComponent(
-        filterValue,
-      )}`,
+      `/api/admin/orders?groupBy=${groupBy}&value=${encodeURIComponent(
+        filterValue
+      )}`
     )
       .then((res) => res.json())
       .then((data) => {

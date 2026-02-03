@@ -1,17 +1,14 @@
 "use client";
 
 import { FoodOrder } from "@/types";
-import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function TodayOrderModal({ onClose }: { onClose: () => void }) {
-  const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
     fetchTodayOrders();
   }, []);
 
@@ -20,7 +17,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
     try {
       const now = new Date();
       const today = now.toISOString();
-      const res = await fetch(`/api/orders/orders?groupBy=day&value=${today}`);
+      const res = await fetch(`/api/admin/orders?groupBy=day&value=${today}`);
       const data = await res.json();
       const todayGroup = data?.data?.[0];
       setOrders(todayGroup?.orders ?? []);
@@ -33,7 +30,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
     const confirm = window.confirm("❗ Bạn có chắc muốn xóa đơn này?");
     if (!confirm) return;
 
-    await fetch(`/api/orders/manage-orders`, {
+    await fetch(`/api/admin/manage-orders`, {
       method: "DELETE",
       body: JSON.stringify({ orderId }),
       headers: { "Content-Type": "application/json" },
@@ -60,15 +57,12 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  if (!mounted) return null;
-
-  return createPortal(
+  return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full p-6 relative">
         <h2 className="text-xl font-bold mb-4">🗓️ Đơn đặt hôm nay</h2>
 
         <button
-          type="button"
           onClick={onClose}
           className="absolute top-2 right-3 text-gray-500 hover:text-red-500"
         >
@@ -115,7 +109,6 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
             </ul>
 
             <button
-              type="button"
               onClick={handleCopy}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
             >
@@ -124,7 +117,6 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
           </>
         )}
       </div>
-    </div>,
-    document.body,
+    </div>
   );
 }
