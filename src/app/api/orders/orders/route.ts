@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
         user: true,
         items: { include: { food: true } },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
     });
 
     const grouped = orders.map((o) => ({
