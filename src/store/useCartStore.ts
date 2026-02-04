@@ -65,7 +65,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ loading: true });
 
     try {
-      const res = await fetch("/api/orders/order", {
+      const res = await fetch("/api/orders/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
