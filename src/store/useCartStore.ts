@@ -49,8 +49,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
     const orderNote = isNoToppingOrder
       ? "Cơm 10k"
       : orderPrice === 30000
-      ? note
-      : note + ` suất ${orderPrice}đ`;
+        ? note
+        : note + ` suất ${orderPrice}đ`;
 
     if (!guestName.trim() || !shortName.trim()) {
       toast.warning("Vui lòng chọn tên hoặc nhập tên mới!");
@@ -65,7 +65,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ loading: true });
 
     try {
-      const res = await fetch("/api/order", {
+      const res = await fetch("/api/orders/order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
