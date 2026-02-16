@@ -1,12 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { BackgroundDecorations, OrderSelection } from "@/components";
+import { LunarNewYearLanding } from "@/components/LunarNewYearLanding";
 import GradientText from "@/components/GradientText";
 
 export default function Home() {
+  const [hasConfig, setHasConfig] = useState(false);
+  const [checkingConfig, setCheckingConfig] = useState(true);
+
+  useEffect(() => {
+    const checkTodayFoods = async () => {
+      try {
+        const res = await fetch("/api/foods/today");
+        const data = await res.json();
+        setHasConfig(Array.isArray(data) && data.length > 0);
+      } catch {
+        setHasConfig(false);
+      } finally {
+        setCheckingConfig(false);
+      }
+    };
+    checkTodayFoods();
+  }, []);
+
+
   return (
     <div className="min-h-screen bg-[#FFFBF0] font-sans text-gray-900 selection:bg-red-200">
-      <main className="relative pt-8 pb-20">
+      {/* Lunar New Year Landing Hero — shown when today's food is configured */}
+      {!checkingConfig && !hasConfig ? (
+        <LunarNewYearLanding />
+      ) : (<main className="relative pt-8 pb-20">
         <BackgroundDecorations />
 
         {/* Hero Section */}
@@ -34,7 +58,9 @@ export default function Home() {
         <div className="container mx-auto">
           <OrderSelection />
         </div>
-      </main>
+      </main>)}
+
+      
     </div>
   );
 }
