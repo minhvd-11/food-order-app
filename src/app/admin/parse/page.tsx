@@ -105,10 +105,10 @@ export default function AdminParsePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Lỗi khi gọi Slack workflow");
+        throw new Error(data.error || "Lỗi khi gọi workflow");
       }
 
-      toast.success("Đã gửi thông báo tới Slack");
+      toast.success("Đã gửi thông báo");
     } catch (error: any) {
       toast.error(error.message || "Lỗi khi gửi thông báo");
     } finally {
