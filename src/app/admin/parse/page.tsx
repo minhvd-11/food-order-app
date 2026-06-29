@@ -16,7 +16,7 @@ export default function AdminParsePage() {
   const [saved, setSaved] = useState(false);
   const [savedFoods, setSavedFoods] = useState<string[]>([]);
   const [savedDate, setSavedDate] = useState<string | null>(null);
-  const [savedTime, setSaveTime] = useState<string>("11h10");
+  const [savedTime, setSaveTime] = useState<string>("11h");
 
   const handleParse = async () => {
     setLoadingParse(true);
