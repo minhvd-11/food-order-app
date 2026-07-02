@@ -116,44 +116,44 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Slack ---
-    if (SLACK_WORKFLOW_WEBHOOK) {
-      const foodsText = foods.length ? `• ${foods.join("\n• ")}` : "";
+    // if (SLACK_WORKFLOW_WEBHOOK) {
+    //   const foodsText = foods.length ? `• ${foods.join("\n• ")}` : "";
 
-      const slackPayload = {
-        date: dateText,
-        message: `Mọi người vào đặt cơm, ${time} em chốt ạ`,
-        url: SITE_URL,
-        foods: foodsText,
-      };
+    //   const slackPayload = {
+    //     date: dateText,
+    //     message: `Mọi người vào đặt cơm, ${time} em chốt ạ`,
+    //     url: SITE_URL,
+    //     foods: foodsText,
+    //   };
 
-      try {
-        const res = await fetch(SLACK_WORKFLOW_WEBHOOK, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(slackPayload),
-        });
+    //   try {
+    //     const res = await fetch(SLACK_WORKFLOW_WEBHOOK, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       body: JSON.stringify(slackPayload),
+    //     });
 
-        if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          console.error(
-            "Slack workflow webhook returned error:",
-            res.status,
-            text,
-          );
-          results.push({ platform: "slack", success: false, error: text });
-        } else {
-          console.log("Slack announce sent successfully");
-          results.push({ platform: "slack", success: true });
-        }
-      } catch (err: any) {
-        console.error("Slack webhook fetch failed:", err);
-        results.push({
-          platform: "slack",
-          success: false,
-          error: err.message,
-        });
-      }
-    }
+    //     if (!res.ok) {
+    //       const text = await res.text().catch(() => "");
+    //       console.error(
+    //         "Slack workflow webhook returned error:",
+    //         res.status,
+    //         text,
+    //       );
+    //       results.push({ platform: "slack", success: false, error: text });
+    //     } else {
+    //       console.log("Slack announce sent successfully");
+    //       results.push({ platform: "slack", success: true });
+    //     }
+    //   } catch (err: any) {
+    //     console.error("Slack webhook fetch failed:", err);
+    //     results.push({
+    //       platform: "slack",
+    //       success: false,
+    //       error: err.message,
+    //     });
+    //   }
+    // }
 
     const allFailed = results.length > 0 && results.every((r) => !r.success);
 
