@@ -17,10 +17,12 @@ export async function GET() {
   return NextResponse.json(users);
 }
 
-export async function PUT(req: NextRequest) {
-  const { id, name, avatarUrl } = await req.json();
-
-  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const { name, avatarUrl } = await req.json();
 
   const updated = await prisma.user.update({
     where: { id },
