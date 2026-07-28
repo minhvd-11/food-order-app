@@ -65,7 +65,9 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
   return createPortal(
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full p-6 relative">
-        <h2 className="text-xl font-bold mb-4">🗓️ Đơn đặt hôm nay</h2>
+        <h2 className="text-xl font-bold mb-4">
+          🗓️ Đơn đặt hôm nay {orders.length} đơn
+        </h2>
 
         <button
           type="button"
