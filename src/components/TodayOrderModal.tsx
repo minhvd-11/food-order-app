@@ -44,10 +44,10 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
 
   const handleCopy = async () => {
     const text = orders
-      .map((o) => {
+      .map((o, index) => {
         const items = o.foodNames?.join(", ") || "";
         const note = o.note?.trim() ? ` (${o.note})` : "";
-        return `${o.userName}: ${items}${note}`;
+        return `${index + 1}. ${o.userName}: ${items}${note}`;
       })
       .join("\n");
 
@@ -84,14 +84,14 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
         ) : (
           <>
             <ul className="space-y-3 mb-4 max-h-100 overflow-y-auto pr-2">
-              {orders.map((o) => (
+              {orders.map((o, index) => (
                 <li
                   key={o.id}
                   className="border rounded p-3 bg-gray-50 shadow-sm text-sm flex justify-between items-start gap-3"
                 >
                   <div>
                     <strong>
-                      {o.userName} ({o.userShortName})
+                      {index + 1}. {o.userName} ({o.userShortName})
                       {!!o.price && (
                         <span>
                           {` - `}
