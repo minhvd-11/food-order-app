@@ -65,7 +65,7 @@ export default function AccountForm({ user }: { user: User }) {
           type="text"
           value={profile.email}
           disabled
-          className="w-full border px-3 py-2 rounded bg-gray-100 text-sm"
+          className="w-full border border-gray-200 dark:border-neutral-700 px-3 py-2 rounded bg-gray-100 dark:bg-neutral-800 text-sm dark:text-gray-200"
         />
       </div>
 
@@ -75,7 +75,7 @@ export default function AccountForm({ user }: { user: User }) {
           type="text"
           value={profile.shortName}
           disabled
-          className="w-full border px-3 py-2 rounded bg-gray-100 text-sm"
+          className="w-full border border-gray-200 dark:border-neutral-700 px-3 py-2 rounded bg-gray-100 dark:bg-neutral-800 text-sm dark:text-gray-200"
         />
       </div>
 
@@ -85,13 +85,13 @@ export default function AccountForm({ user }: { user: User }) {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border px-3 py-2 rounded text-sm"
+          className="w-full border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 rounded text-sm dark:text-gray-100"
         />
       </div>
 
       <button
         onClick={handleSave}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+        className="w-full bg-blue-600 dark:bg-blue-700 text-white py-2 px-4 rounded hover:bg-blue-700 dark:hover:bg-blue-600"
       >
         Save
       </button>

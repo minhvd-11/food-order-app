@@ -25,7 +25,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FFFBF0] font-sans text-gray-900 selection:bg-red-200">
+    <div className="min-h-screen bg-[#FFFBF0] dark:bg-neutral-950 font-sans text-gray-900 dark:text-gray-100 selection:bg-red-200 dark:selection:bg-red-900">
       {/* Lunar New Year Landing Hero — shown when today's food is configured */}
       {!checkingConfig && !hasConfig ? (
         <LunarNewYearLanding />

@@ -93,7 +93,7 @@ export const OrderSelection = () => {
 
   return (
     // <main className="p-6 space-y-6">
-    <section className="max-w-4xl mx-auto p-6 bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-red-100 relative z-10 my-8">
+    <section className="max-w-4xl mx-auto p-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md rounded-2xl shadow-xl border border-red-100 dark:border-neutral-800 relative z-10 my-8">
       {/* Name & Shortname Inputs */}
       <div className="flex justify-between gap-4 items-end mb-4 flex-wrap">
         <div className="flex-1 min-w-[200px]">
@@ -113,7 +113,7 @@ export const OrderSelection = () => {
                   setShortName(""); // reset if switching to new entry
                 }
               }}
-              className="w-full h-12 pl-4 pr-10 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white shadow-sm transition-all appearance-none text-gray-700 cursor-pointer"
+              className="w-full h-12 pl-4 pr-10 rounded-xl border border-gray-200 dark:border-neutral-700 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white dark:bg-neutral-800 shadow-sm transition-all appearance-none text-gray-700 dark:text-gray-200 cursor-pointer"
             >
               <option value="">--Chọn tên bạn--</option>
               {users.map((user) => (
@@ -123,7 +123,7 @@ export const OrderSelection = () => {
               ))}
             </select>
             <ChevronDown
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
               size={18}
             />
           </div>
@@ -141,7 +141,7 @@ export const OrderSelection = () => {
               setGuestName(e.target.value);
               setShortName(e.target.value);
             }}
-            className="w-full h-12 pl-4 pr-10 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white shadow-sm transition-all appearance-none text-gray-700"
+            className="w-full h-12 pl-4 pr-10 rounded-xl border border-gray-200 dark:border-neutral-700 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white dark:bg-neutral-800 shadow-sm transition-all appearance-none text-gray-700 dark:text-gray-200"
           />
         </div>
 
@@ -166,7 +166,7 @@ export const OrderSelection = () => {
                   ${
                     isSelected
                       ? "border-emerald-400 bg-emerald-400/10 shadow-lg shadow-emerald-400/20"
-                      : "border-slate-200 bg-white hover:border-green-300 hover:shadow-md"
+                      : "border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md"
                   }
                `}
             >
@@ -174,14 +174,16 @@ export const OrderSelection = () => {
                 <div className="flex justify-between">
                   <h3
                     className={`transition-colors ${
-                      isSelected ? "text-emerald-600" : "text-slate-900"
+                      isSelected
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-slate-900 dark:text-slate-100"
                     }`}
                   >
                     {option.label}
                   </h3>
                 </div>
 
-                <p className="text-slate-600 text-sm">
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
                   {option.value.toLocaleString()} đ
                 </p>
               </div>
@@ -196,8 +198,8 @@ export const OrderSelection = () => {
       {loading ? (
         <p>⏳ Đang tải danh sách món ăn...</p>
       ) : !foods.length ? (
-        <div className="p-6 rounded-xl bg-gray-50 border border-dashed border-gray-300 text-center">
-          <p className="text-gray-500 flex items-center justify-center gap-2">
+        <div className="p-6 rounded-xl bg-gray-50 dark:bg-neutral-800 border border-dashed border-gray-300 dark:border-neutral-700 text-center">
+          <p className="text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2">
             <span className="text-xl">✕</span> Không có món ăn nào cho hôm nay.
           </p>
         </div>
@@ -218,11 +220,11 @@ export const OrderSelection = () => {
                 className={cn(
                   "border p-4 rounded-xl shadow-sm transition-all duration-150",
                   orderPrice !== 10000
-                    ? "cursor-pointer hover:shadow-md active:scale-[0.98] hover:border-gray-400"
+                    ? "cursor-pointer hover:shadow-md active:scale-[0.98] hover:border-gray-400 dark:hover:border-neutral-500"
                     : "cursor-not-allowed opacity-60",
                   isSelected && orderPrice !== 10000
-                    ? "border-green-500 bg-green-100 text-green-900"
-                    : "border-gray-200",
+                    ? "border-green-500 bg-green-100 text-green-900 dark:border-green-600 dark:bg-green-900/40 dark:text-green-100"
+                    : "border-gray-200 dark:border-neutral-700",
                 )}
               >
                 <p className="text-base font-medium">{food.name}</p>
@@ -244,7 +246,7 @@ export const OrderSelection = () => {
                 onClick={() => setNote(!note ? opt : note + `, ${opt}`)}
                 variant="outline"
                 size="sm"
-                className="hover:bg-black hover:text-white mr-2"
+                className="hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black mr-2"
               >
                 {opt}
               </Button>
@@ -256,7 +258,7 @@ export const OrderSelection = () => {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="VD: Thêm ớt, thêm cà, ..."
-            className="w-full p-2 border rounded-md my-3"
+            className="w-full p-2 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100 rounded-md my-3"
             rows={3}
           />
         </div>
@@ -264,14 +266,14 @@ export const OrderSelection = () => {
 
       {/* Selected Summary & Submit */}
       {(selectedItems.length > 0 || isNoToppingOrder) && (
-        <div className="mt-8 p-4 border-t">
+        <div className="mt-8 p-4 border-t border-gray-200 dark:border-neutral-700">
           <h2 className="text-lg font-semibold mb-2">🛒 Món đã chọn:</h2>
           {isNoToppingOrder ? (
             <span>Cơm 10k</span>
           ) : (
             <ul className="list-disc list-inside space-y-1 mb-4">
               {selectedItems.map((item) => (
-                <li key={item.id} className="text-gray-800">
+                <li key={item.id} className="text-gray-800 dark:text-gray-200">
                   {item.name}
                 </li>
               ))}

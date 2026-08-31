@@ -3,6 +3,7 @@ import { Navbar } from "@/components";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/contexts/UserContext";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Daily Lunch",
@@ -15,13 +16,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <UserProvider>
-          <Navbar />
-          {children}
-          <Toaster position="top-right" richColors />
-        </UserProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <UserProvider>
+            <Navbar />
+            {children}
+            <Toaster position="top-right" richColors />
+          </UserProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

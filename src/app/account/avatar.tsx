@@ -25,14 +25,14 @@ export default function Avatar({ size = 150, avatarUrl }: AvatarProps) {
           height={size}
           src={previewUrl}
           alt="Avatar"
-          className="rounded-full object-cover border"
+          className="rounded-full object-cover border border-gray-200 dark:border-neutral-700"
         />
       ) : (
         <div
-          className="rounded-full bg-gray-300 flex items-center justify-center"
+          className="rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center"
           style={{ width: size, height: size }}
         >
-          <span className="text-gray-500 text-sm">No image</span>
+          <span className="text-gray-500 dark:text-gray-400 text-sm">No image</span>
         </div>
       )}
     </div>

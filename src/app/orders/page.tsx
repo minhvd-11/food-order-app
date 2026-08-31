@@ -62,7 +62,7 @@ export default function AdminPage() {
             setGroupBy(e.target.value as "day" | "user");
             setOrders([]);
           }}
-          className="border rounded p-1"
+          className="border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded p-1"
         >
           <option value="day">Theo ngày</option>
           <option value="user">Theo người dùng</option>
@@ -77,7 +77,7 @@ export default function AdminPage() {
         <select
           value={filterValue}
           onChange={(e) => setFilterValue(e.target.value)}
-          className="border rounded p-2 w-full"
+          className="border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 rounded p-2 w-full"
         >
           {filterOptions.map((opt) => (
             <option key={opt} value={opt}>
@@ -98,9 +98,9 @@ export default function AdminPage() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className="border rounded-xl p-4 shadow-sm bg-white"
+              className="border border-gray-200 dark:border-neutral-700 rounded-xl p-4 shadow-sm bg-white dark:bg-neutral-900"
             >
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
                 {groupBy === "user" &&
                   new Date(order.date).toLocaleDateString("vi-VN")}
                 {groupBy === "day" && (

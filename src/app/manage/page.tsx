@@ -42,7 +42,7 @@ export default function AdminManagePage() {
           type="month"
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="ml-2 border p-2 rounded"
+          className="ml-2 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-2 rounded"
         />
       </div>
 
@@ -51,22 +51,22 @@ export default function AdminManagePage() {
       ) : summary.length === 0 ? (
         <p>Không có dữ liệu trong tháng này.</p>
       ) : (
-        <table className="w-full border-collapse border border-gray-300">
+        <table className="w-full border-collapse border border-gray-300 dark:border-neutral-700">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Tên người dùng</th>
-              <th className="border p-2">Số lần đặt</th>
-              <th className="border p-2">Số tiền (VND)</th>
+            <tr className="bg-gray-100 dark:bg-neutral-800">
+              <th className="border border-gray-300 dark:border-neutral-700 p-2">Tên người dùng</th>
+              <th className="border border-gray-300 dark:border-neutral-700 p-2">Số lần đặt</th>
+              <th className="border border-gray-300 dark:border-neutral-700 p-2">Số tiền (VND)</th>
             </tr>
           </thead>
           <tbody>
             {summary.map((row) => (
               <tr key={row.userId}>
-                <td className="border p-2">
+                <td className="border border-gray-300 dark:border-neutral-700 p-2">
                   {row.userName} ({row.userShortName})
                 </td>
-                <td className="border p-2 text-center">{row.count}</td>
-                <td className="border p-2 text-right">
+                <td className="border border-gray-300 dark:border-neutral-700 p-2 text-center">{row.count}</td>
+                <td className="border border-gray-300 dark:border-neutral-700 p-2 text-right">
                   {row.money.toLocaleString("vi-VN")}
                 </td>
               </tr>

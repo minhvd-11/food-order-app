@@ -27,14 +27,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow">
+    <div className="max-w-md mx-auto mt-20 p-6 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 rounded shadow">
       <h1 className="text-2xl font-bold mb-6">Đăng nhập</h1>
 
       <form onSubmit={handleEmailLogin} className="space-y-4">
         <div>
           <label>Email</label>
           <input
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 rounded"
             type="email"
             required
             value={email}
@@ -44,7 +44,7 @@ export default function LoginPage() {
         <div>
           <label>Mật khẩu</label>
           <input
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 rounded"
             type="password"
             required
             value={password}
@@ -53,7 +53,7 @@ export default function LoginPage() {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded"
+          className="w-full bg-blue-600 dark:bg-blue-700 text-white py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600"
           disabled={isPending}
         >
           {isPending ? "Đang đăng nhập..." : "Đăng nhập bằng Email"}
@@ -64,7 +64,7 @@ export default function LoginPage() {
         <p className="mb-2">hoặc</p>
         <button
           onClick={handleGoogleLogin}
-          className="w-full bg-red-500 text-white py-2 rounded"
+          className="w-full bg-red-500 dark:bg-red-600 text-white py-2 rounded hover:bg-red-600 dark:hover:bg-red-500"
           disabled={isPending}
         >
           {isPending ? "Đang chuyển hướng..." : "Đăng nhập với Google"}

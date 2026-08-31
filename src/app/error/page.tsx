@@ -16,10 +16,10 @@ export default function ErrorPage() {
 
   return (
     <div className="text-center mt-10">
-      <h1 className="text-xl font-semibold text-red-600">
+      <h1 className="text-xl font-semibold text-red-600 dark:text-red-400">
         Sorry, something went wrong.
       </h1>
-      <p className="text-sm text-gray-500">Redirecting to home...</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400">Redirecting to home...</p>
     </div>
   );
 }

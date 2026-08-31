@@ -64,7 +64,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full p-6 relative">
+      <div className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 rounded-lg max-w-2xl w-full p-6 relative">
         <h2 className="text-xl font-bold mb-4">
           🗓️ Đơn đặt hôm nay {orders.length} đơn
         </h2>
@@ -72,7 +72,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-2 right-3 text-gray-500 hover:text-red-500"
+          className="absolute top-2 right-3 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
         >
           ✖
         </button>
@@ -87,7 +87,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
               {orders.map((o, index) => (
                 <li
                   key={o.id}
-                  className="border rounded p-3 bg-gray-50 shadow-sm text-sm flex justify-between items-start gap-3"
+                  className="border border-gray-200 dark:border-neutral-700 rounded p-3 bg-gray-50 dark:bg-neutral-800 shadow-sm text-sm flex justify-between items-start gap-3"
                 >
                   <div>
                     <strong>
@@ -95,7 +95,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
                       {!!o.price && (
                         <span>
                           {` - `}
-                          <span className="text-lime-500">
+                          <span className="text-lime-600 dark:text-lime-400">
                             {o.price / 1000}k
                           </span>
                         </span>
@@ -103,12 +103,12 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
                     </strong>
                     : {o.foodNames?.join(", ") || ""}
                     {o.note?.trim() && (
-                      <span className="text-gray-700"> ({o.note})</span>
+                      <span className="text-gray-700 dark:text-gray-300"> ({o.note})</span>
                     )}
                   </div>
                   <button
                     onClick={() => removeOrder(o.id)}
-                    className="text-red-600 hover:text-red-800 text-xs"
+                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs"
                   >
                     🗑️ Xóa
                   </button>

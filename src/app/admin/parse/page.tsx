@@ -139,7 +139,7 @@ export default function AdminParsePage() {
               <Card
                 key={food.id}
                 className={cn(
-                  "border p-4 rounded-xl transition-all border-gray-200 hover:border-gray-400",
+                  "border p-4 rounded-xl transition-all border-gray-200 dark:border-neutral-700 hover:border-gray-400 dark:hover:border-neutral-500",
                 )}
               >
                 <p className="text-base font-medium">{food.name}</p>
@@ -169,7 +169,11 @@ export default function AdminParsePage() {
               />
             }
 
-            {saved && <span className="text-sm text-green-600">Đã lưu</span>}
+            {saved && (
+              <span className="text-sm text-green-600 dark:text-green-400">
+                Đã lưu
+              </span>
+            )}
           </div>
         </>
       )}
