@@ -1,22 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Textarea, Card, Input } from "@/components/ui";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SketchyButton } from "@/components";
 import { Food } from "@/types";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function AdminParsePage() {
   const [text, setText] = useState("");
+  const [loadingToday, setLoadingToday] = useState(true);
   const [loadingParse, setLoadingParse] = useState(false);
   const [loadingSave, setLoadingSave] = useState(false);
   const [announcing, setAnnouncing] = useState(false);
   const [result, setResult] = useState<Food[]>([]);
   const [saved, setSaved] = useState(false);
-  const [savedFoods, setSavedFoods] = useState<string[]>([]);
   const [savedDate, setSavedDate] = useState<string | null>(null);
   const [savedTime, setSaveTime] = useState<string>("11h");
+
+  useEffect(() => {
+    const loadTodayFoods = async () => {
+      try {
+        const res = await fetch("/api/foods/today");
+        const foods: Food[] = await res.json();
+
+        if (Array.isArray(foods) && foods.length > 0) {
+          setResult(foods);
+          setSaved(true);
+          setSavedDate(new Date().toISOString());
+        }
+      } catch (error) {
+        toast.error(
+          getErrorMessage(error, "Lỗi khi kiểm tra thực đơn hôm nay"),
+        );
+      } finally {
+        setLoadingToday(false);
+      }
+    };
+
+    loadTodayFoods();
+  }, []);
 
   const handleParse = async () => {
     setLoadingParse(true);
@@ -34,18 +61,16 @@ export default function AdminParsePage() {
 
       const foodsWithId: Food[] = data.foods.map(
         (food: { name: string }, index: number) => ({
-          id: index,
+          id: String(index),
           name: food.name,
         }),
       );
 
       setResult(foodsWithId);
-      setSaved(false); // reset saved status after new parse
-      setSavedFoods([]);
+      setSaved(false);
       setSavedDate(null);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error(error.message || "Đã có lỗi xảy ra");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Đã có lỗi xảy ra"));
     } finally {
       setLoadingParse(false);
     }
@@ -74,17 +99,18 @@ export default function AdminParsePage() {
 
       toast.success("Đã lưu danh sách món ăn cho ngày hôm nay");
       setSaved(true);
-      setSavedFoods(payload.foods);
       setSavedDate(payload.date);
-    } catch (error: any) {
-      toast.error(error.message || "Lỗi khi lưu dữ liệu");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Lỗi khi lưu dữ liệu"));
     } finally {
       setLoadingSave(false);
     }
   };
 
   const handleAnnounce = async () => {
-    if (!saved || savedFoods.length === 0) {
+    const savedFoodNames = result.map((item) => item.name);
+
+    if (!saved || savedFoodNames.length === 0) {
       toast.error("Chưa có danh sách đã lưu để thông báo");
       return;
     }
@@ -98,7 +124,7 @@ export default function AdminParsePage() {
         },
         body: JSON.stringify({
           date: savedDate,
-          foods: savedFoods,
+          foods: savedFoodNames,
           time: savedTime,
         }),
       });
@@ -109,8 +135,8 @@ export default function AdminParsePage() {
       }
 
       toast.success("Đã gửi thông báo");
-    } catch (error: any) {
-      toast.error(error.message || "Lỗi khi gửi thông báo");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Lỗi khi gửi thông báo"));
     } finally {
       setAnnouncing(false);
     }
@@ -131,35 +157,39 @@ export default function AdminParsePage() {
         {loadingParse ? "Đang phân tích..." : "Phân tích"}
       </SketchyButton>
 
-      {result.length > 0 && (
-        <>
-          <h2 className="text-xl font-semibold">Kết quả:</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {result.map((food) => (
-              <Card
-                key={food.id}
-                className={cn(
-                  "border p-4 rounded-xl transition-all border-gray-200 dark:border-neutral-700 hover:border-gray-400 dark:hover:border-neutral-500",
-                )}
+      {loadingToday ? (
+        <p>⏳ Đang kiểm tra thực đơn hôm nay...</p>
+      ) : (
+        result.length > 0 && (
+          <>
+            <h2 className="text-xl font-semibold">
+              {saved ? "Thực đơn hôm nay:" : "Kết quả:"}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {result.map((food) => (
+                <Card
+                  key={food.id}
+                  className={cn(
+                    "border p-4 rounded-xl transition-all border-gray-200 dark:border-neutral-700 hover:border-gray-400 dark:hover:border-neutral-500",
+                  )}
+                >
+                  <p className="text-base font-medium">{food.name}</p>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex gap-3 items-center">
+              <SketchyButton onClick={handleSave} disabled={loadingSave}>
+                {loadingSave ? "Đang lưu..." : saved ? "Lưu lại" : "Lưu"}
+              </SketchyButton>
+
+              <SketchyButton
+                onClick={handleAnnounce}
+                disabled={!saved || announcing}
               >
-                <p className="text-base font-medium">{food.name}</p>
-              </Card>
-            ))}
-          </div>
+                {announcing ? "Đang gửi..." : "Thông báo"}
+              </SketchyButton>
 
-          <div className="flex gap-3 items-center">
-            <SketchyButton onClick={handleSave} disabled={loadingSave}>
-              {loadingSave ? "Đang lưu..." : "Lưu"}
-            </SketchyButton>
-
-            <SketchyButton
-              onClick={handleAnnounce}
-              disabled={!saved || announcing}
-            >
-              {announcing ? "Đang gửi..." : "Thông báo"}
-            </SketchyButton>
-
-            {
               <Input
                 placeholder="Thời gian chốt"
                 type="text"
@@ -167,15 +197,15 @@ export default function AdminParsePage() {
                 onChange={(e) => setSaveTime(e.target.value)}
                 className="max-w-24"
               />
-            }
 
-            {saved && (
-              <span className="text-sm text-green-600 dark:text-green-400">
-                Đã lưu
-              </span>
-            )}
-          </div>
-        </>
+              {saved && (
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  Đã lưu
+                </span>
+              )}
+            </div>
+          </>
+        )
       )}
     </main>
   );
