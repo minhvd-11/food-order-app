@@ -17,6 +17,7 @@ interface CartStore {
   setOrderPrice: (orderPrice: number) => void;
   selectedItems: FoodItem[];
   toggleItem: (item: FoodItem) => void;
+  addItems: (items: FoodItem[]) => void;
   submitOrder: () => void;
   loading: boolean;
 }
@@ -35,6 +36,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
       ? current.filter((i) => i.id !== item.id)
       : [...current, item];
     set({ selectedItems: updated });
+  },
+  addItems: (items) => {
+    const merged = [...get().selectedItems];
+    items.forEach((item) => {
+      if (!merged.some((i) => i.id === item.id)) merged.push(item);
+    });
+    set({ selectedItems: merged });
   },
   loading: false,
   setNote: (val?: string) => set({ note: val }),

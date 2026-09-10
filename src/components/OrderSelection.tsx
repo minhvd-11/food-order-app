@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SketchyButton, TodayOrderModal } from "@/components";
+import { FoodWheelModal, SketchyButton, TodayOrderModal } from "@/components";
 import { useCartStore } from "@/store/useCartStore";
 import { Button, Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { Food, OrderPrice, OrderPriceTierType, User } from "@/types";
 import { useUser } from "@/contexts/UserContext";
 import { ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 const priceOptions: OrderPrice[] = [
   {
@@ -47,6 +48,7 @@ export const OrderSelection = () => {
     setNote,
     orderPrice,
     setOrderPrice,
+    addItems,
   } = useCartStore();
 
   const { userMetadata } = useUser();
@@ -55,6 +57,7 @@ export const OrderSelection = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showWheel, setShowWheel] = useState(false);
 
   const isNoToppingOrder = orderPrice === 10000;
 
@@ -192,7 +195,25 @@ export const OrderSelection = () => {
         })}
       </div>
 
-      <h1 className="text-2xl font-bold mb-4">🍽 Danh sách món ăn</h1>
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <h1 className="text-2xl font-bold">🍽 Danh sách món ăn</h1>
+        {!loading && !!foods.length && !isNoToppingOrder && (
+          <SketchyButton onClick={() => setShowWheel(true)}>
+            🎰 Play
+          </SketchyButton>
+        )}
+      </div>
+
+      <FoodWheelModal
+        open={showWheel}
+        foods={foods}
+        onClose={() => setShowWheel(false)}
+        onConfirm={(picked) => {
+          addItems(picked);
+          setShowWheel(false);
+          toast.success(`🎉 Đã thêm ${picked.length} món từ vòng quay!`);
+        }}
+      />
 
       {/* Food Cards */}
       {loading ? (
