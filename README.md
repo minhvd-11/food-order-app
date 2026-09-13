@@ -8,7 +8,7 @@ Daily Lunch is Teko's internal web app for organizing the office's daily lunch o
 - **Ordering** — On the home page, employees pick their name (or type a new one), choose a price tier (Thuần Cơm / Cơ bản / Hơi no / Ngập mồm), select dishes, add optional notes, and submit their order for the day.
 - **Order lookup & history** — `/orders` lets anyone browse past orders grouped by day or by person. A "today's orders" modal shows/edits/removes orders in real time and can copy the day's order list to the clipboard.
 - **Admin stats** — `/manage` aggregates each person's order count and total spend for a selected month.
-- **Announcements** — After saving a menu, admins can trigger a webhook post (Google Chat card, with a Slack workflow variant available) announcing the menu and the ordering cutoff time.
+- **Announcements** — After saving a menu, admins trigger an announcement of the menu and ordering cutoff. It goes to the Google Chat space via an incoming webhook **and**, separately, as a 1:1 DM to everyone subscribed to the lunch Chat bot (see [Google Chat lunch bot](#google-chat-lunch-bot-per-user-dms)). A Slack workflow variant is available too.
 - **Auth & profile** — Email/password and Google OAuth login via Supabase, with a profile page to view your personal order history and edit your display name/avatar.
 - **Light/Dark theme** — Full light/dark mode support (via `next-themes`) with a toggle switch in the navbar, respecting the system preference by default.
 - **Lunar New Year mode** — When no menu is configured for the day, the home page shows an animated Tết-themed landing hero instead of the ordering form.
@@ -22,7 +22,7 @@ Daily Lunch is Teko's internal web app for organizing the office's daily lunch o
 - **Database:** PostgreSQL via [Prisma ORM](https://www.prisma.io)
 - **Auth:** [Supabase](https://supabase.com) (email/password + Google OAuth, SSR-aware middleware session refresh)
 - **AI:** Google Gemini (`@google/generative-ai`) for parsing free-text menus into structured food lists
-- **Notifications:** Google Chat / Slack incoming webhooks for daily menu announcements
+- **Notifications:** Google Chat incoming webhook (space) + a Google Chat app/bot sending per-user DMs via the Chat API; optional Slack workflow webhook
 - **Misc:** `sonner` (toasts), `framer-motion`/`motion` (animations), `date-fns`
 
 ## Data Model
@@ -34,6 +34,7 @@ Defined in [`prisma/schema.prisma`](prisma/schema.prisma):
 - **DayFood** — links a `Food` to a calendar `date`, i.e. "this dish is on today's menu".
 - **Order** — one order per user per day, with a `price` tier and optional `note`.
 - **OrderItem** — the dishes attached to an `Order`.
+- **ChatSubscriber** — a Google Chat user subscribed to the bot's daily DM, storing their Chat user id and the 1:1 DM space to post into.
 
 ## Project Structure
 
@@ -49,13 +50,16 @@ src/
     api/
       foods/today/           # Today's configured menu
       orders/                # Create/list/filter/manage orders
-      admin/                 # Parse-food (Gemini), save foods, announce webhook
+      admin/                 # Parse-food (Gemini), save foods, announce
+      chat/bot/              # Google Chat app endpoint (subscribe/unsubscribe)
       users/                 # User profile CRUD
   components/                # NavBar, OrderSelection, modals, ThemeToggle, ui/...
   contexts/UserContext.tsx   # Current Supabase user + profile metadata
   store/useCartStore.ts      # Zustand store for the order-in-progress
   lib/
     prisma.ts                # Prisma client singleton
+    googleChat.ts            # Chat API client (service account) + menu card
+    googleChatEvents.ts      # Verifies + normalizes inbound Chat events
     supabase/                # Client/server/middleware Supabase helpers
 prisma/                      # Prisma schema + migrations
 ```
@@ -80,8 +84,54 @@ Create a `.env` (database) and `.env.local` (app secrets) with:
 | `NEXT_PUBLIC_SITE_URL` / `SITE_URL` | Public base URL, used for OAuth redirects and announcement links |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret (configured in Supabase auth provider) |
 | `GEMINI_API_URL` / `GEMINI_API_KEY` | Google Gemini endpoint + key for menu parsing |
-| `GOOGLE_CHAT_WEBHOOK` | Incoming webhook URL for Google Chat menu announcements |
+| `GOOGLE_CHAT_WEBHOOK` | Incoming webhook URL for the Google Chat **space** announcement |
+| `GOOGLE_CHAT_SERVICE_ACCOUNT` | Service account JSON for the Chat bot (raw JSON or base64), enables per-user DMs |
+| `GOOGLE_CHAT_PROJECT_NUMBER` | Set if the Chat app's Authentication Audience is **Project Number** |
+| `GOOGLE_CHAT_ENDPOINT_URL` | Set if the Authentication Audience is **HTTP endpoint URL** (recommended); must match the configured URL exactly |
 | `SLACK_WORKFLOW_WEBHOOK` | (optional) Slack workflow webhook for announcements |
+
+Each announcement channel is independent: set only `GOOGLE_CHAT_WEBHOOK` and you get the space post, set only the two `GOOGLE_CHAT_*` bot vars and you get DMs, set all three and you get both.
+
+### 2b. Google Chat lunch bot (per-user DMs)
+
+Incoming webhooks can only post to a space — DMing a person requires a real Chat
+app. One-time setup:
+
+1. **Google Cloud project** → enable the **Google Chat API**.
+2. **Service account** → create one, download its JSON key, and put the key in
+   `GOOGLE_CHAT_SERVICE_ACCOUNT` (raw JSON, or base64 it to survive Vercel's
+   env-var UI: `base64 -w0 key.json`). No domain-wide delegation is needed —
+   the bot only ever posts as itself.
+3. **Chat API → Configuration**:
+   - *Application info*: App name (≤25 chars), Avatar URL (HTTPS, square
+     PNG/JPEG, 256×256+), Description (≤40 chars). All three are required.
+   - *Interactive features*: leave **Enable interactive features** on.
+   - *Functionality*: 1:1 messaging is on by default; also tick **Join spaces
+     and group conversations** if people should be able to `@mention` it.
+   - *Connection settings*: **HTTP endpoint URL** →
+     `https://<your-domain>/api/chat/bot`.
+   - *Authentication Audience*: either option works —
+     **HTTP endpoint URL** (Google's recommendation for self-hosted endpoints
+     like Vercel) → set `GOOGLE_CHAT_ENDPOINT_URL` to that exact same URL, or
+     **Project Number** → set `GOOGLE_CHAT_PROJECT_NUMBER` instead.
+   - *Visibility*: add the people or a Google Group who should see the app. No
+     Marketplace publishing or admin approval is needed for a team.
+4. The endpoint verifies every request's bearer token and **rejects everything
+   if neither variable is set**, so a half-configured deploy can't be driven by
+   strangers.
+
+Then anyone can find the bot in Google Chat, start a DM, and they're subscribed
+automatically. In a DM the bot understands:
+
+| Command | Effect |
+| --- | --- |
+| `subscribe` / `dk` / `đăng ký` | Start receiving the daily menu DM |
+| `unsubscribe` / `huỷ` | Stop receiving it |
+| `status` | Check whether you're subscribed |
+| `help` | Show the command list |
+
+Removing the app unsubscribes you. If a DM later fails because the app was
+removed, that subscriber is deactivated automatically on the next announcement.
 
 ### 3. Set up the database
 

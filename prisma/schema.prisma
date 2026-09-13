@@ -52,3 +52,17 @@ model OrderItem {
   food    Food   @relation(fields: [foodId], references: [id])
   order   Order  @relation(fields: [orderId], references: [id])
 }
+
+/// A Google Chat user who has subscribed to the lunch bot's daily DM.
+/// `spaceName` is the 1:1 DM space between that user and this Chat app,
+/// captured when they add/message the bot.
+model ChatSubscriber {
+  id          String   @id @default(cuid())
+  chatUserId  String   @unique
+  spaceName   String
+  displayName String?
+  email       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

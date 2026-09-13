@@ -1,14 +1,114 @@
 // app/api/admin/announce/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import {
+  buildLunchCard,
+  ChatApiError,
+  findDirectMessageSpace,
+  isChatBotConfigured,
+  sendChatMessage,
+} from "@/lib/googleChat";
+
+export const runtime = "nodejs";
 
 const GOOGLE_CHAT_WEBHOOK = process.env.GOOGLE_CHAT_WEBHOOK;
 const SLACK_WORKFLOW_WEBHOOK = process.env.SLACK_WORKFLOW_WEBHOOK;
 const SITE_URL = process.env.SITE_URL || "https://daily-lunch-2025.vercel.app";
 
+type AnnounceResult = {
+  platform: string;
+  success: boolean;
+  error?: string;
+  sent?: number;
+  failed?: number;
+};
+
+type Subscriber = {
+  id: string;
+  chatUserId: string;
+  spaceName: string;
+};
+
+/**
+ * Sends one subscriber their DM, repairing a stale space once and retiring
+ * subscribers who have removed the app.
+ */
+async function deliverToSubscriber(
+  subscriber: Subscriber,
+  card: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await sendChatMessage(subscriber.spaceName, card);
+  } catch (err) {
+    if (!(err instanceof ChatApiError) || !err.isGone) throw err;
+
+    const freshSpace = await findDirectMessageSpace(subscriber.chatUserId);
+
+    if (freshSpace && freshSpace !== subscriber.spaceName) {
+      await sendChatMessage(freshSpace, card);
+      await prisma.chatSubscriber.update({
+        where: { id: subscriber.id },
+        data: { spaceName: freshSpace },
+      });
+      return;
+    }
+
+    // The DM is gone for good — the user removed the app.
+    await prisma.chatSubscriber.update({
+      where: { id: subscriber.id },
+      data: { active: false },
+    });
+    throw err;
+  }
+}
+
+/**
+ * Fans the daily card out to everyone subscribed to the bot. Returns null when
+ * nobody is subscribed, so an empty list is never counted as a delivery that
+ * could mask a failure on another channel.
+ */
+async function announceToSubscribers(
+  card: Record<string, unknown>,
+): Promise<AnnounceResult | null> {
+  const subscribers = await prisma.chatSubscriber.findMany({
+    where: { active: true },
+    select: { id: true, chatUserId: true, spaceName: true },
+  });
+
+  if (subscribers.length === 0) {
+    console.log("No Google Chat subscribers to DM");
+    return null;
+  }
+
+  const outcomes = await Promise.allSettled(
+    subscribers.map((subscriber) => deliverToSubscriber(subscriber, card)),
+  );
+
+  const failures = outcomes.filter((o) => o.status === "rejected");
+  failures.forEach((failure) =>
+    console.error("Google Chat DM failed:", failure.reason),
+  );
+
+  const sent = outcomes.length - failures.length;
+  console.log(`Google Chat DMs sent: ${sent}/${outcomes.length}`);
+
+  return {
+    platform: "google_chat_dm",
+    success: failures.length === 0,
+    sent,
+    failed: failures.length,
+    error: failures.length
+      ? `${failures.length} DM(s) failed to send`
+      : undefined,
+  };
+}
+
 export async function POST(req: NextRequest) {
-  if (!GOOGLE_CHAT_WEBHOOK && !SLACK_WORKFLOW_WEBHOOK) {
+  const chatBotConfigured = isChatBotConfigured();
+
+  if (!GOOGLE_CHAT_WEBHOOK && !SLACK_WORKFLOW_WEBHOOK && !chatBotConfigured) {
     console.error(
-      "Missing both GOOGLE_CHAT_WEBHOOK and SLACK_WORKFLOW_WEBHOOK env vars",
+      "Missing GOOGLE_CHAT_WEBHOOK, SLACK_WORKFLOW_WEBHOOK and GOOGLE_CHAT_SERVICE_ACCOUNT env vars",
     );
     return NextResponse.json(
       { error: "Server not configured" },
@@ -29,64 +129,16 @@ export async function POST(req: NextRequest) {
 
     const dateText = new Date(date).toLocaleDateString("vi-VN");
 
-    const results: { platform: string; success: boolean; error?: string }[] =
-      [];
+    const results: AnnounceResult[] = [];
+    const card = buildLunchCard({ dateText, foods, time });
 
-    // --- Google Chat ---
+    // --- Google Chat space (incoming webhook) ---
     if (GOOGLE_CHAT_WEBHOOK) {
-      const foodsHtml = foods.length
-        ? foods.map((f) => `• ${f}`).join("<br>")
-        : "";
-
-      const googleChatPayload = {
-        cardsV2: [
-          {
-            cardId: "lunch",
-            card: {
-              header: {
-                title: `Đặt cơm ${dateText}`,
-                subtitle: `Chốt lúc ${time}`,
-              },
-              sections: [
-                {
-                  widgets: [
-                    {
-                      textParagraph: {
-                        text: `Mọi người vào đặt cơm trước <b>${time}</b>.`,
-                      },
-                    },
-                    {
-                      textParagraph: {
-                        text: foodsHtml,
-                      },
-                    },
-                    {
-                      buttonList: {
-                        buttons: [
-                          {
-                            text: "Đặt cơm",
-                            onClick: {
-                              openLink: {
-                                url: SITE_URL,
-                              },
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        ],
-      };
-
       try {
         const res = await fetch(GOOGLE_CHAT_WEBHOOK, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(googleChatPayload),
+          body: JSON.stringify(card),
         });
 
         if (!res.ok) {
@@ -109,6 +161,21 @@ export async function POST(req: NextRequest) {
         console.error("Google Chat webhook fetch failed:", err);
         results.push({
           platform: "google_chat",
+          success: false,
+          error: err.message,
+        });
+      }
+    }
+
+    // --- Google Chat DMs (people subscribed to the bot) ---
+    if (chatBotConfigured) {
+      try {
+        const dmResult = await announceToSubscribers(card);
+        if (dmResult) results.push(dmResult);
+      } catch (err: any) {
+        console.error("Google Chat DM announce failed:", err);
+        results.push({
+          platform: "google_chat_dm",
           success: false,
           error: err.message,
         });

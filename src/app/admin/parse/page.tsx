@@ -134,7 +134,18 @@ export default function AdminParsePage() {
         throw new Error(data.error || "Lỗi khi gọi workflow");
       }
 
-      toast.success("Đã gửi thông báo");
+      const dm = Array.isArray(data.results)
+        ? data.results.find(
+            (r: { platform: string; sent?: number }) =>
+              r.platform === "google_chat_dm",
+          )
+        : undefined;
+
+      toast.success(
+        dm?.sent
+          ? `Đã gửi thông báo (${dm.sent} người nhận tin nhắn riêng)`
+          : "Đã gửi thông báo",
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, "Lỗi khi gửi thông báo"));
     } finally {
