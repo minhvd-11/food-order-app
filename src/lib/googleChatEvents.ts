@@ -64,7 +64,9 @@ function strategyFor(
   if (claims.iss === CHAT_ISSUER) {
     if (!projectNumber) {
       console.error(
-        "Chat sent a project-number token but GOOGLE_CHAT_PROJECT_NUMBER is not set",
+        'Chat request rejected: Authentication Audience is "Project Number" ' +
+          "but GOOGLE_CHAT_PROJECT_NUMBER is not set. Set it to the Cloud " +
+          `project number (the token's audience is "${claims.aud}").`,
       );
       return null;
     }
@@ -77,17 +79,23 @@ function strategyFor(
       claims.email !== CHAT_ISSUER ||
       (claims.email_verified !== true && claims.email_verified !== "true")
     ) {
+      console.error(
+        `Chat request rejected: OIDC token is from "${claims.email}", not ${CHAT_ISSUER}`,
+      );
       return null;
     }
     if (!endpointUrl) {
       console.error(
-        "Chat sent an endpoint-URL token but GOOGLE_CHAT_ENDPOINT_URL is not set",
+        'Chat request rejected: Authentication Audience is "HTTP endpoint URL" ' +
+          "but GOOGLE_CHAT_ENDPOINT_URL is not set. Set it to exactly " +
+          `"${claims.aud}".`,
       );
       return null;
     }
     return { certsUrl: GOOGLE_OIDC_CERTS_URL, audience: endpointUrl };
   }
 
+  console.error(`Chat request rejected: unexpected token issuer "${claims.iss}"`);
   return null;
 }
 
@@ -116,8 +124,17 @@ export async function verifyChatRequest(req: Request): Promise<boolean> {
     if (!strategy) return false;
 
     const now = Math.floor(Date.now() / 1000);
-    if (claims.aud !== strategy.audience) return false;
-    if (typeof claims.exp !== "number" || claims.exp <= now) return false;
+    if (claims.aud !== strategy.audience) {
+      console.error(
+        `Chat request rejected: audience mismatch. Token says "${claims.aud}", ` +
+          `this deployment expects "${strategy.audience}". These must match exactly.`,
+      );
+      return false;
+    }
+    if (typeof claims.exp !== "number" || claims.exp <= now) {
+      console.error("Chat request rejected: token expired");
+      return false;
+    }
 
     const certs = await getCerts(strategy.certsUrl);
     const cert = certs[header.kid];
@@ -270,4 +287,18 @@ export function isDirectMessage(event: ChatEvent): boolean {
     event.space.type === "DM" ||
     event.space.type === "DIRECT_MESSAGE"
   );
+}
+
+/** What this deployment is configured to accept — for the bot health check. */
+export function chatVerificationConfig(): {
+  mode: "endpoint-url" | "project-number" | "unconfigured";
+  expectedAudience: string | null;
+} {
+  const projectNumber = process.env.GOOGLE_CHAT_PROJECT_NUMBER?.trim();
+  const endpointUrl = process.env.GOOGLE_CHAT_ENDPOINT_URL?.trim();
+
+  if (endpointUrl) return { mode: "endpoint-url", expectedAudience: endpointUrl };
+  if (projectNumber)
+    return { mode: "project-number", expectedAudience: projectNumber };
+  return { mode: "unconfigured", expectedAudience: null };
 }

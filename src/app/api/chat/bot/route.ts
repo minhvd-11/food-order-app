@@ -8,10 +8,12 @@ import { findDirectMessageSpace } from "@/lib/googleChat";
 import {
   ChatEvent,
   chatReply,
+  chatVerificationConfig,
   isDirectMessage,
   normalizeChatEvent,
   verifyChatRequest,
 } from "@/lib/googleChatEvents";
+import { isChatBotConfigured } from "@/lib/googleChat";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -192,4 +194,23 @@ export async function POST(req: NextRequest) {
     console.error("Error in /api/chat/bot:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+/**
+ * Health check for setup. Google Chat only ever POSTs here, so GET is free to
+ * report how this deployment is wired up. Everything below is non-secret: the
+ * public endpoint URL plus whether each variable is present.
+ */
+export async function GET() {
+  const { mode, expectedAudience } = chatVerificationConfig();
+
+  return NextResponse.json({
+    serviceAccountConfigured: isChatBotConfigured(),
+    authenticationAudience: mode,
+    expectedAudience,
+    hint:
+      mode === "unconfigured"
+        ? "Set GOOGLE_CHAT_ENDPOINT_URL (or GOOGLE_CHAT_PROJECT_NUMBER) and redeploy."
+        : "expectedAudience must match the Chat API configuration exactly.",
+  });
 }
