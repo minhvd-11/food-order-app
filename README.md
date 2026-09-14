@@ -9,6 +9,7 @@ Daily Lunch is Teko's internal web app for organizing the office's daily lunch o
 - **Order lookup & history** — `/orders` lets anyone browse past orders grouped by day or by person. A "today's orders" modal shows/edits/removes orders in real time and can copy the day's order list to the clipboard.
 - **Admin stats** — `/manage` aggregates each person's order count and total spend for a selected month.
 - **Announcements** — After saving a menu, admins trigger an announcement of the menu and ordering cutoff. It goes to the Google Chat space via an incoming webhook **and**, separately, as a 1:1 DM to everyone subscribed to the lunch Chat bot (see [Google Chat lunch bot](#google-chat-lunch-bot-per-user-dms)). A Slack workflow variant is available too.
+- **Order confirmation DM** — When someone submits an order, the Chat bot DMs them a confirmation card with the order's number for the day, the dishes they picked, their note, and the price tier. Only for people subscribed to the bot; the order is saved regardless of whether the DM succeeds.
 - **Auth & profile** — Email/password and Google OAuth login via Supabase, with a profile page to view your personal order history and edit your display name/avatar.
 - **Light/Dark theme** — Full light/dark mode support (via `next-themes`) with a toggle switch in the navbar, respecting the system preference by default.
 - **Lunar New Year mode** — When no menu is configured for the day, the home page shows an animated Tết-themed landing hero instead of the ordering form.
@@ -34,7 +35,7 @@ Defined in [`prisma/schema.prisma`](prisma/schema.prisma):
 - **DayFood** — links a `Food` to a calendar `date`, i.e. "this dish is on today's menu".
 - **Order** — one order per user per day, with a `price` tier and optional `note`.
 - **OrderItem** — the dishes attached to an `Order`.
-- **ChatSubscriber** — a Google Chat user subscribed to the bot's daily DM, storing their Chat user id and the 1:1 DM space to post into.
+- **ChatSubscriber** — a Google Chat user subscribed to the bot's daily DM, storing their Chat user id and the 1:1 DM space to post into. Linked to a `User` by email, falling back to the email's local part vs `shortName`, since `User.email` is null for people created from the order form.
 
 ## Project Structure
 
@@ -60,6 +61,7 @@ src/
     prisma.ts                # Prisma client singleton
     googleChat.ts            # Chat API client (service account) + menu card
     googleChatEvents.ts      # Verifies + normalizes inbound Chat events
+    chatNotifications.ts     # Per-user DMs for app events (order confirmation)
     supabase/                # Client/server/middleware Supabase helpers
 prisma/                      # Prisma schema + migrations
 ```

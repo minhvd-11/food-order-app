@@ -189,6 +189,30 @@ export async function findDirectMessageSpace(
 }
 
 /**
+ * Card text is rendered as limited HTML, so anything that came from a user or
+ * from the menu parser has to be escaped before it goes in.
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+const PRICE_LABELS: Record<number, string> = {
+  10000: "Thuần Cơm",
+  30000: "Cơ bản",
+  35000: "Hơi no",
+  40000: "Ngập mồm",
+};
+
+function formatPrice(price: number): string {
+  const label = PRICE_LABELS[price];
+  const amount = `${new Intl.NumberFormat("vi-VN").format(price)}đ`;
+  return label ? `${label} (${amount})` : amount;
+}
+
+/**
  * The daily menu card. Shared by the space webhook and the per-user DMs so
  * both always look the same.
  */
@@ -198,7 +222,9 @@ export function buildLunchCard(opts: {
   time: string;
 }): Record<string, unknown> {
   const { dateText, foods, time } = opts;
-  const foodsHtml = foods.length ? foods.map((f) => `• ${f}`).join("<br>") : "";
+  const foodsHtml = foods.length
+    ? foods.map((f) => `• ${escapeHtml(f)}`).join("<br>")
+    : "";
 
   return {
     cardsV2: [
@@ -239,6 +265,64 @@ export function buildLunchCard(opts: {
               ],
             },
           ],
+        },
+      },
+    ],
+  };
+}
+
+/** Per-person confirmation DM sent right after an order is saved. */
+export function buildOrderConfirmationCard(opts: {
+  dateText: string;
+  orderNumber: number;
+  foods: string[];
+  note?: string | null;
+  price: number;
+}): Record<string, unknown> {
+  const { dateText, orderNumber, foods, note, price } = opts;
+
+  const widgets: Record<string, unknown>[] = [
+    {
+      textParagraph: {
+        text: foods.length
+          ? `Món đã đặt:<br>${foods.map((f) => `• ${escapeHtml(f)}`).join("<br>")}`
+          : "Bạn chưa chọn món nào.",
+      },
+    },
+  ];
+
+  const trimmedNote = note?.trim();
+  if (trimmedNote) {
+    widgets.push({
+      textParagraph: { text: `Ghi chú: <b>${escapeHtml(trimmedNote)}</b>` },
+    });
+  }
+
+  widgets.push({
+    textParagraph: { text: `Suất: ${escapeHtml(formatPrice(price))}` },
+  });
+
+  widgets.push({
+    buttonList: {
+      buttons: [
+        {
+          text: "Xem đơn hôm nay",
+          onClick: { openLink: { url: SITE_URL } },
+        },
+      ],
+    },
+  });
+
+  return {
+    cardsV2: [
+      {
+        cardId: "order-confirmation",
+        card: {
+          header: {
+            title: "✅ Đặt cơm thành công",
+            subtitle: `${dateText} • Đơn số ${orderNumber}`,
+          },
+          sections: [{ widgets }],
         },
       },
     ],

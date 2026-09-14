@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { startOfDay } from "date-fns";
+import { notifyOrderCreated } from "@/lib/chatNotifications";
 
 type OrderRequest = {
   name: string;
@@ -68,11 +69,24 @@ export async function POST(req: Request) {
         create: foodIds?.map((foodId) => ({ foodId })),
       },
     },
-    include: { items: true },
+    include: { items: { include: { food: true } } },
+  });
+
+  // The order is this many orders deep for the day, counting itself.
+  const orderNumber = await prisma.order.count({ where: { date: today } });
+
+  await notifyOrderCreated({
+    user,
+    dateText: today.toLocaleDateString("vi-VN"),
+    orderNumber,
+    foods: order.items.map((item) => item.food.name),
+    note,
+    price: finalPrice,
   });
 
   return NextResponse.json({
     message: "Lưu đơn thành công",
     orderId: order.id,
+    orderNumber,
   });
 }
