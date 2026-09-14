@@ -271,7 +271,14 @@ export function buildLunchCard(opts: {
   };
 }
 
-/** Per-person confirmation DM sent right after an order is saved. */
+/**
+ * Per-person confirmation DM sent right after an order is saved.
+ *
+ * The order number is what people read out to collect their food, so it leads
+ * the card twice: in the header title (the largest text a card can render —
+ * cards have no font-size control) and again as a coloured, icon-flagged row
+ * above the fold.
+ */
 export function buildOrderConfirmationCard(opts: {
   dateText: string;
   orderNumber: number;
@@ -282,6 +289,15 @@ export function buildOrderConfirmationCard(opts: {
   const { dateText, orderNumber, foods, note, price } = opts;
 
   const widgets: Record<string, unknown>[] = [
+    {
+      decoratedText: {
+        startIcon: { knownIcon: "CONFIRMATION_NUMBER_ICON" },
+        topLabel: "Đọc số này khi lấy cơm",
+        text: `<b><font color="#e8710a">SỐ ${orderNumber}</font></b>`,
+        wrapText: true,
+      },
+    },
+    { divider: {} },
     {
       textParagraph: {
         text: foods.length
@@ -314,13 +330,16 @@ export function buildOrderConfirmationCard(opts: {
   });
 
   return {
+    // Falls back to plain text wherever a card can't render (notifications,
+    // older clients) - and the number survives there too.
+    text: `✅ Đặt cơm thành công — đơn của bạn là *SỐ ${orderNumber}*`,
     cardsV2: [
       {
         cardId: "order-confirmation",
         card: {
           header: {
-            title: "✅ Đặt cơm thành công",
-            subtitle: `${dateText} • Đơn số ${orderNumber}`,
+            title: `✅ Đơn số ${orderNumber}`,
+            subtitle: `Đặt cơm thành công • ${dateText}`,
           },
           sections: [{ widgets }],
         },
