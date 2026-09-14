@@ -86,7 +86,8 @@ Create a `.env` (database) and `.env.local` (app secrets) with:
 | `GEMINI_API_URL` / `GEMINI_API_KEY` | Google Gemini endpoint + key for menu parsing |
 | `GOOGLE_CHAT_WEBHOOK` | Incoming webhook URL for the Google Chat **space** announcement |
 | `GOOGLE_CHAT_SERVICE_ACCOUNT` | Service account JSON for the Chat bot (raw JSON or base64), enables per-user DMs |
-| `GOOGLE_CHAT_PROJECT_NUMBER` | Set if the Chat app's Authentication Audience is **Project Number** |
+| `GOOGLE_CHAT_PROJECT_NUMBER` | Cloud project number. Required if the app is a Chat **add-on** (it identifies the add-ons service agent that signs requests), and also serves as the audience if Authentication Audience is **Project Number** |
+| `GOOGLE_CHAT_SERVICE_AGENT_EMAIL` | (optional) Explicit sender address to trust, instead of deriving it from the project number |
 | `GOOGLE_CHAT_ENDPOINT_URL` | Set if the Authentication Audience is **HTTP endpoint URL** (recommended); must match the configured URL exactly |
 | `SLACK_WORKFLOW_WEBHOOK` | (optional) Slack workflow webhook for announcements |
 
@@ -116,9 +117,23 @@ app. One-time setup:
      **Project Number** → set `GOOGLE_CHAT_PROJECT_NUMBER` instead.
    - *Visibility*: add the people or a Google Group who should see the app. No
      Marketplace publishing or admin approval is needed for a team.
-4. The endpoint verifies every request's bearer token and **rejects everything
-   if neither variable is set**, so a half-configured deploy can't be driven by
-   strangers.
+4. Set `GOOGLE_CHAT_PROJECT_NUMBER` to your Cloud project number. Google signs
+   requests as one of two senders depending on how the app is built:
+   `chat@system.gserviceaccount.com` for a classic Chat app, or
+   `service-<PROJECT_NUMBER>@gcp-sa-gsuiteaddons.iam.gserviceaccount.com` when
+   the app is a Chat add-on. The second is project-specific, so it has to be
+   pinned to *your* project — trusting the whole `gcp-sa-gsuiteaddons` domain
+   would let any Google Cloud project post to this endpoint. (If Google ever
+   sends a different address, `GOOGLE_CHAT_SERVICE_AGENT_EMAIL` overrides the
+   derived one; the rejection log names the address it saw.)
+5. The endpoint verifies every request's bearer token and **rejects everything
+   if no audience variable is set**, so a half-configured deploy can't be driven
+   by strangers.
+
+`GET /api/chat/bot` reports how the running deployment is configured — audience
+mode, expected audience, and accepted senders — which is the fastest way to
+check that Vercel actually picked up the variables (it does not apply new
+environment variables to an existing deployment; you must redeploy).
 
 Then anyone can find the bot in Google Chat, start a DM, and they're subscribed
 automatically. In a DM the bot understands:

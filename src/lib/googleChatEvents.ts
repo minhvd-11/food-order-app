@@ -21,6 +21,30 @@ const GOOGLE_OIDC_ISSUERS = new Set([
   "https://accounts.google.com",
 ]);
 
+/**
+ * Who Google may sign an OIDC request as. A classic Chat app is sent as
+ * chat@system (Google-owned, always allowed). A Chat app built as a Workspace
+ * add-on is sent as that project's add-ons service agent, which is
+ * project-specific and therefore must be pinned to our own project number —
+ * accepting the whole gcp-sa-gsuiteaddons domain would let any Google Cloud
+ * project drive this endpoint.
+ */
+function allowedIssuerEmails(): Set<string> {
+  const allowed = new Set([CHAT_ISSUER]);
+
+  const explicit = process.env.GOOGLE_CHAT_SERVICE_AGENT_EMAIL?.trim();
+  if (explicit) allowed.add(explicit);
+
+  const projectNumber = process.env.GOOGLE_CHAT_PROJECT_NUMBER?.trim();
+  if (projectNumber) {
+    allowed.add(
+      `service-${projectNumber}@gcp-sa-gsuiteaddons.iam.gserviceaccount.com`,
+    );
+  }
+
+  return allowed;
+}
+
 const certCaches = new Map<
   string,
   { certs: Record<string, string>; expiresAt: number }
@@ -74,13 +98,16 @@ function strategyFor(
   }
 
   if (claims.iss && GOOGLE_OIDC_ISSUERS.has(claims.iss)) {
-    // An OIDC token is only from Chat if Chat's service account signed for it.
-    if (
-      claims.email !== CHAT_ISSUER ||
-      (claims.email_verified !== true && claims.email_verified !== "true")
-    ) {
+    const emailVerified =
+      claims.email_verified === true || claims.email_verified === "true";
+    const allowed = allowedIssuerEmails();
+
+    if (!claims.email || !emailVerified || !allowed.has(claims.email)) {
       console.error(
-        `Chat request rejected: OIDC token is from "${claims.email}", not ${CHAT_ISSUER}`,
+        `Chat request rejected: OIDC token is from "${claims.email}" ` +
+          `(email_verified=${claims.email_verified}). This deployment accepts: ` +
+          `${[...allowed].join(", ")}. If the sender is your add-on's service ` +
+          "agent, set GOOGLE_CHAT_PROJECT_NUMBER to your Cloud project number.",
       );
       return null;
     }
@@ -214,12 +241,17 @@ export function normalizeChatEvent(body: unknown): ChatEvent {
     const chat = raw.chat as Record<string, any>;
     const user = (chat.user ?? raw.commonEventObject?.user) as RawUser;
 
+    // The space lives on the payload, but is also documented at the top level
+    // of the chat envelope — prefer the payload and fall back.
+    const spaceOf = (payload?: { space?: RawSpace }) =>
+      payload?.space ?? (chat.space as RawSpace | undefined);
+
     if (chat.messagePayload) {
       return toEvent(
         "MESSAGE",
         "addon",
         user,
-        chat.messagePayload.space,
+        spaceOf(chat.messagePayload),
         chat.messagePayload.message,
       );
     }
@@ -228,7 +260,7 @@ export function normalizeChatEvent(body: unknown): ChatEvent {
         "MESSAGE",
         "addon",
         user,
-        chat.appCommandPayload.space,
+        spaceOf(chat.appCommandPayload),
         chat.appCommandPayload.message,
       );
     }
@@ -237,7 +269,7 @@ export function normalizeChatEvent(body: unknown): ChatEvent {
         "ADDED_TO_SPACE",
         "addon",
         user,
-        chat.addedToSpacePayload.space,
+        spaceOf(chat.addedToSpacePayload),
         undefined,
       );
     }
@@ -246,12 +278,12 @@ export function normalizeChatEvent(body: unknown): ChatEvent {
         "REMOVED_FROM_SPACE",
         "addon",
         user,
-        chat.removedFromSpacePayload.space,
+        spaceOf(chat.removedFromSpacePayload),
         undefined,
       );
     }
 
-    return toEvent("UNKNOWN", "addon", user, undefined, undefined);
+    return toEvent("UNKNOWN", "addon", user, spaceOf(undefined), undefined);
   }
 
   // Classic HTTP Chat app format.
@@ -293,12 +325,20 @@ export function isDirectMessage(event: ChatEvent): boolean {
 export function chatVerificationConfig(): {
   mode: "endpoint-url" | "project-number" | "unconfigured";
   expectedAudience: string | null;
+  acceptedSenders: string[];
 } {
   const projectNumber = process.env.GOOGLE_CHAT_PROJECT_NUMBER?.trim();
   const endpointUrl = process.env.GOOGLE_CHAT_ENDPOINT_URL?.trim();
 
-  if (endpointUrl) return { mode: "endpoint-url", expectedAudience: endpointUrl };
+  const acceptedSenders = [...allowedIssuerEmails()];
+
+  if (endpointUrl)
+    return { mode: "endpoint-url", expectedAudience: endpointUrl, acceptedSenders };
   if (projectNumber)
-    return { mode: "project-number", expectedAudience: projectNumber };
-  return { mode: "unconfigured", expectedAudience: null };
+    return {
+      mode: "project-number",
+      expectedAudience: projectNumber,
+      acceptedSenders,
+    };
+  return { mode: "unconfigured", expectedAudience: null, acceptedSenders };
 }

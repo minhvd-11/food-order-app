@@ -202,12 +202,13 @@ export async function POST(req: NextRequest) {
  * public endpoint URL plus whether each variable is present.
  */
 export async function GET() {
-  const { mode, expectedAudience } = chatVerificationConfig();
+  const { mode, expectedAudience, acceptedSenders } = chatVerificationConfig();
 
   return NextResponse.json({
     serviceAccountConfigured: isChatBotConfigured(),
     authenticationAudience: mode,
     expectedAudience,
+    acceptedSenders,
     hint:
       mode === "unconfigured"
         ? "Set GOOGLE_CHAT_ENDPOINT_URL (or GOOGLE_CHAT_PROJECT_NUMBER) and redeploy."
