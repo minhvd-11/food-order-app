@@ -76,6 +76,30 @@ export default function AdminParsePage() {
     }
   };
 
+  // Fallback for when the Gemini API is unavailable: split the raw input
+  // on commas (and line breaks) without any AI cleanup.
+  const handleSplit = () => {
+    const names = [
+      ...new Set(
+        text
+          .split(/[,\n]/)
+          .map((name) => name.trim().replace(/\s+/g, " "))
+          .filter(Boolean),
+      ),
+    ];
+
+    if (names.length === 0) {
+      toast.error("Không tìm thấy món ăn nào");
+      return;
+    }
+
+    setResult(
+      names.map((name, index) => ({ id: String(index), name })) as Food[],
+    );
+    setSaved(false);
+    setSavedDate(null);
+  };
+
   const handleSave = async () => {
     setLoadingSave(true);
     try {
@@ -164,9 +188,18 @@ export default function AdminParsePage() {
         className="min-h-[120px]"
       />
 
-      <SketchyButton onClick={handleParse} disabled={loadingParse || !text}>
-        {loadingParse ? "Đang phân tích..." : "Phân tích"}
-      </SketchyButton>
+      <div className="flex gap-3 items-center">
+        <SketchyButton onClick={handleParse} disabled={loadingParse || !text}>
+          {loadingParse ? "Đang phân tích..." : "Phân tích"}
+        </SketchyButton>
+
+        <SketchyButton
+          onClick={handleSplit}
+          disabled={loadingParse || !text.trim()}
+        >
+          Tách
+        </SketchyButton>
+      </div>
 
       {loadingToday ? (
         <p>⏳ Đang kiểm tra thực đơn hôm nay...</p>
