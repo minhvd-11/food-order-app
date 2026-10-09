@@ -11,31 +11,26 @@ export async function POST(req: Request) {
     const localDate = fromZonedTime(parsedDate, "Asia/Ho_Chi_Minh");
     localDate.setHours(17, 0, 0, 0);
 
-    const foodRecords = await Promise.all(
-      foods.map(async (name) => {
-        const food = await prisma.food.upsert({
-          where: { name },
-          update: {},
-          create: { name },
-        });
+    // Batch queries instead of 2 upserts per food in parallel, which
+    // exhausted the DB connection pool when saving many foods at once.
+    const names = [...new Set(foods)];
 
-        await prisma.dayFood.upsert({
-          where: {
-            date_foodId: {
-              date: localDate,
-              foodId: food.id,
-            },
-          },
-          update: {},
-          create: {
-            date: localDate,
-            foodId: food.id,
-          },
-        });
+    await prisma.food.createMany({
+      data: names.map((name) => ({ name })),
+      skipDuplicates: true,
+    });
 
-        return food;
-      })
-    );
+    const existing = await prisma.food.findMany({
+      where: { name: { in: names } },
+    });
+
+    await prisma.dayFood.createMany({
+      data: existing.map((food) => ({ date: localDate, foodId: food.id })),
+      skipDuplicates: true,
+    });
+
+    const byName = new Map(existing.map((food) => [food.name, food]));
+    const foodRecords = names.map((name) => byName.get(name)!);
 
     return NextResponse.json({ success: true, foods: foodRecords });
   } catch (err) {
