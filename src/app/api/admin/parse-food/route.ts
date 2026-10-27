@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     let foods;
     try {
       foods = JSON.parse(textOutput);
-    } catch (e) {
+    } catch {
       console.error("JSON Parse Error:", textOutput);
       return NextResponse.json(
         { error: "Lỗi định dạng dữ liệu từ AI" },
@@ -82,8 +82,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ foods });
-  } catch (err: any) {
-    console.error("Lỗi phân tích AI:", err.message || err);
+  } catch (err) {
+    console.error("Lỗi phân tích AI:", err instanceof Error ? err.message : err);
     return NextResponse.json(
       { error: "Lỗi server hoặc không phân tích được" },
       { status: 500 }

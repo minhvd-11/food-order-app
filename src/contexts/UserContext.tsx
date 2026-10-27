@@ -3,6 +3,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -25,9 +26,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createClient();
+  // Lazy state keeps one client per provider, so the effect below runs once.
+  const [supabase] = useState(() => createClient());
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.auth.getUser();
     if (!error && data.user) {
@@ -38,7 +40,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setUserMetadata(null);
     }
     setLoading(false);
-  };
+  }, [supabase]);
 
   useEffect(() => {
     fetchUser();
@@ -49,7 +51,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUser, supabase]);
 
   return (
     <UserContext.Provider

@@ -55,7 +55,7 @@ export function TodayOrderModal({ onClose }: { onClose: () => void }) {
       await navigator.clipboard.writeText(text);
 
       toast.success("📋 Đã sao chép danh sách đơn đặt hôm nay!");
-    } catch (err) {
+    } catch {
       toast.error("❌ Lỗi khi sao chép vào clipboard.");
     }
   };

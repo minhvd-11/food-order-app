@@ -204,6 +204,24 @@ type RawSpace = {
   singleUserBotDm?: boolean;
 };
 type RawMessage = { text?: string; argumentText?: string };
+type RawPayload = { space?: RawSpace; message?: RawMessage };
+type RawBody = {
+  // Workspace add-on format.
+  chat?: {
+    user?: RawUser;
+    space?: RawSpace;
+    messagePayload?: RawPayload;
+    appCommandPayload?: RawPayload;
+    addedToSpacePayload?: RawPayload;
+    removedFromSpacePayload?: RawPayload;
+  };
+  commonEventObject?: { user?: RawUser };
+  // Classic HTTP Chat app format.
+  type?: string;
+  user?: RawUser;
+  space?: RawSpace;
+  message?: RawMessage;
+};
 
 function toEvent(
   type: ChatEventType,
@@ -234,17 +252,16 @@ function toEvent(
 
 /** Flattens either payload shape into a single event. */
 export function normalizeChatEvent(body: unknown): ChatEvent {
-  const raw = (body ?? {}) as Record<string, any>;
+  const raw = (body ?? {}) as RawBody;
 
   // Workspace add-on format: everything hangs off a `chat` envelope.
   if (raw.chat) {
-    const chat = raw.chat as Record<string, any>;
-    const user = (chat.user ?? raw.commonEventObject?.user) as RawUser;
+    const chat = raw.chat;
+    const user = chat.user ?? raw.commonEventObject?.user;
 
     // The space lives on the payload, but is also documented at the top level
     // of the chat envelope — prefer the payload and fall back.
-    const spaceOf = (payload?: { space?: RawSpace }) =>
-      payload?.space ?? (chat.space as RawSpace | undefined);
+    const spaceOf = (payload?: RawPayload) => payload?.space ?? chat.space;
 
     if (chat.messagePayload) {
       return toEvent(

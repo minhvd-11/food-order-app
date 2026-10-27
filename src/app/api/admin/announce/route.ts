@@ -13,7 +13,6 @@ export const runtime = "nodejs";
 
 const GOOGLE_CHAT_WEBHOOK = process.env.GOOGLE_CHAT_WEBHOOK;
 const SLACK_WORKFLOW_WEBHOOK = process.env.SLACK_WORKFLOW_WEBHOOK;
-const SITE_URL = process.env.SITE_URL || "https://daily-lunch-2025.vercel.app";
 
 type AnnounceResult = {
   platform: string;
@@ -157,12 +156,12 @@ export async function POST(req: NextRequest) {
           console.log("Google Chat announce sent successfully");
           results.push({ platform: "google_chat", success: true });
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Google Chat webhook fetch failed:", err);
         results.push({
           platform: "google_chat",
           success: false,
-          error: err.message,
+          error: err instanceof Error ? err.message : String(err),
         });
       }
     }
@@ -172,12 +171,12 @@ export async function POST(req: NextRequest) {
       try {
         const dmResult = await announceToSubscribers(card);
         if (dmResult) results.push(dmResult);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Google Chat DM announce failed:", err);
         results.push({
           platform: "google_chat_dm",
           success: false,
-          error: err.message,
+          error: err instanceof Error ? err.message : String(err),
         });
       }
     }
@@ -232,7 +231,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, results });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error in /api/admin/announce:", err);
     return NextResponse.json(
       { error: "Internal server error" },

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { startOfDay } from "date-fns";
 
@@ -73,7 +74,7 @@ export async function GET(req: NextRequest) {
   }
 
   // ===== CASE 1: Daily orders =====
-  let where: any = {};
+  const where: Prisma.OrderWhereInput = {};
   if (dateParam) {
     const date = startOfDay(new Date(dateParam));
     where.date = date;

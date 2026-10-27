@@ -1,29 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { BackgroundDecorations, OrderSelection } from "@/components";
 // import { LunarNewYearLanding } from "@/components/LunarNewYearLanding";
 import GradientText from "@/components/GradientText";
 
 export default function Home() {
-  const [hasConfig, setHasConfig] = useState(false);
-  const [checkingConfig, setCheckingConfig] = useState(true);
-
-  useEffect(() => {
-    const checkTodayFoods = async () => {
-      try {
-        const res = await fetch("/api/foods/today");
-        const data = await res.json();
-        setHasConfig(Array.isArray(data) && data.length > 0);
-      } catch {
-        setHasConfig(false);
-      } finally {
-        setCheckingConfig(false);
-      }
-    };
-    checkTodayFoods();
-  }, []);
-
   return (
     <div className="min-h-screen bg-[#FFFBF0] dark:bg-neutral-950 font-sans text-gray-900 dark:text-gray-100 selection:bg-red-200 dark:selection:bg-red-900">
       {/* Lunar New Year Landing Hero — disabled: previously shown when no daily food was configured.

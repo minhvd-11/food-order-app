@@ -12,7 +12,7 @@ export default function ErrorPage() {
       router.push("/");
     }, 3000);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [router]);
 
   return (
     <div className="text-center mt-10">

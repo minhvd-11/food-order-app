@@ -20,7 +20,7 @@ export default function UserOrderStats({ userId }: { userId: string }) {
       }
     };
     loadProfile();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     const fetchOrders = async () => {

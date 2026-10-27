@@ -35,7 +35,7 @@ export default function AccountForm({ user }: { user: User }) {
     };
 
     loadProfile();
-  }, []);
+  }, [user.id]);
 
   const handleSave = async () => {
     if (!profile) return;

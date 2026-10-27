@@ -96,8 +96,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
       toast.success("🧾 Đơn đã được gửi thành công!");
       set({ guestName: "", shortName: "", note: "", selectedItems: [] });
-    } catch (error: any) {
-      toast.error("🚨 Lỗi: " + error.message);
+    } catch (error) {
+      toast.error(
+        "🚨 Lỗi: " + (error instanceof Error ? error.message : String(error)),
+      );
     } finally {
       set({ loading: false }); // Stop loading no matter what
     }
