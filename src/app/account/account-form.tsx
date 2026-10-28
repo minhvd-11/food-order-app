@@ -1,100 +1,95 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Avatar from "./avatar";
-import { User } from "@supabase/supabase-js";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Button, Card, Input } from "@/components/ui";
 
-interface UserProfile {
+export type AccountProfile = {
   id: string;
   name: string;
   shortName: string;
-  email: string;
-  avatarUrl: string | null;
-}
+};
 
-export default function AccountForm({ user }: { user: User }) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [name, setName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+export default function AccountForm({ profile }: { profile: AccountProfile }) {
+  const router = useRouter();
+  const [savedName, setSavedName] = useState(profile.name);
+  const [name, setName] = useState(profile.name);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      const res = await fetch("/api/users");
-      const users: UserProfile[] = await res.json();
-      const current = users.find((u) => u.id === user.id);
+  const trimmed = name.trim();
+  const canSave = !!trimmed && trimmed !== savedName && !saving;
 
-      if (current) {
-        setProfile(current);
-        setName(current.name || "");
-        setAvatarUrl(current.avatarUrl || "");
-      }
+  const handleSave = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!canSave) return;
 
-      setLoading(false);
-    };
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/users/${profile.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ name: trimmed }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
-    loadProfile();
-  }, [user.id]);
-
-  const handleSave = async () => {
-    if (!profile) return;
-
-    const res = await fetch(`/api/users/${profile.id}`, {
-      method: "PUT",
-      body: JSON.stringify({ name, avatarUrl }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!res.ok) {
-      toast.error("Failed to update profile");
-    } else {
-      toast.success("Profile updated successfully!");
+      setSavedName(trimmed);
+      setName(trimmed);
+      toast.success("Đã lưu thông tin");
+      router.refresh(); // show the new name in the page header
+    } catch {
+      toast.error("Không lưu được, vui lòng thử lại");
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading || !profile) return <p>Loading...</p>;
-
   return (
-    <div className="space-y-6 max-w-md mx-auto">
-      <Avatar avatarUrl={avatarUrl} size={120} />
+    <Card className="gap-0 border-red-100 py-0 dark:border-neutral-800">
+      <h2 className="border-b border-border px-5 py-4 font-semibold">
+        Thông tin cá nhân
+      </h2>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
-        <input
-          type="text"
-          value={profile.email}
-          disabled
-          className="w-full border border-gray-200 dark:border-neutral-700 px-3 py-2 rounded bg-gray-100 dark:bg-neutral-800 text-sm dark:text-gray-200"
-        />
-      </div>
+      <form onSubmit={handleSave} className="space-y-4 p-5">
+        <div className="space-y-2">
+          <label htmlFor="account-short-name" className="text-sm font-medium">
+            Tên tài khoản
+          </label>
+          <Input
+            id="account-short-name"
+            value={profile.shortName}
+            readOnly
+            aria-describedby="account-short-name-hint"
+            className="bg-muted/60 text-muted-foreground"
+          />
+          <p
+            id="account-short-name-hint"
+            className="text-xs text-muted-foreground"
+          >
+            Lấy từ email, không thể thay đổi.
+          </p>
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Short Name</label>
-        <input
-          type="text"
-          value={profile.shortName}
-          disabled
-          className="w-full border border-gray-200 dark:border-neutral-700 px-3 py-2 rounded bg-gray-100 dark:bg-neutral-800 text-sm dark:text-gray-200"
-        />
-      </div>
+        <div className="space-y-2">
+          <label htmlFor="account-name" className="text-sm font-medium">
+            Họ và tên
+          </label>
+          <Input
+            id="account-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            maxLength={100}
+            autoComplete="name"
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Full Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 rounded text-sm dark:text-gray-100"
-        />
-      </div>
-
-      <button
-        onClick={handleSave}
-        className="w-full bg-blue-600 dark:bg-blue-700 text-white py-2 px-4 rounded hover:bg-blue-700 dark:hover:bg-blue-600"
-      >
-        Save
-      </button>
-    </div>
+        <Button type="submit" disabled={!canSave} className="w-full">
+          {saving && <Loader2 className="animate-spin" />}
+          {saving ? "Đang lưu..." : "Lưu thay đổi"}
+        </Button>
+      </form>
+    </Card>
   );
 }

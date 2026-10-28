@@ -60,7 +60,12 @@ export function StatTile({
       )}
     >
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-xl font-semibold sm:text-2xl">{value}</p>
+      <p
+        className="mt-1 truncate text-xl font-semibold sm:text-2xl"
+        title={typeof value === "string" ? value : undefined}
+      >
+        {value}
+      </p>
       {hint && (
         <p className="mt-0.5 truncate text-xs text-muted-foreground">{hint}</p>
       )}

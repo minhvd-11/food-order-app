@@ -1,40 +1,34 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
 import Image from "next/image";
 
-interface AvatarProps {
-  size?: number;
+// Profile photo, or the first letter of the name when there is none
+export default function Avatar({
+  avatarUrl,
+  name,
+  size = 64,
+}: {
   avatarUrl: string | null;
-}
-
-export default function Avatar({ size = 150, avatarUrl }: AvatarProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (avatarUrl) {
-      setPreviewUrl(avatarUrl);
-    }
-  }, [avatarUrl]);
+  name: string;
+  size?: number;
+}) {
+  if (avatarUrl) {
+    return (
+      <Image
+        src={avatarUrl}
+        alt=""
+        width={size}
+        height={size}
+        className="shrink-0 rounded-full object-cover ring-2 ring-red-100 dark:ring-red-900/50"
+      />
+    );
+  }
 
   return (
-    <div className="flex flex-col items-center space-y-4">
-      {previewUrl ? (
-        <Image
-          width={size}
-          height={size}
-          src={previewUrl}
-          alt="Avatar"
-          className="rounded-full object-cover border border-gray-200 dark:border-neutral-700"
-        />
-      ) : (
-        <div
-          className="rounded-full bg-gray-300 dark:bg-neutral-700 flex items-center justify-center"
-          style={{ width: size, height: size }}
-        >
-          <span className="text-gray-500 dark:text-gray-400 text-sm">No image</span>
-        </div>
-      )}
-    </div>
+    <span
+      aria-hidden="true"
+      className="flex shrink-0 items-center justify-center rounded-full bg-red-50 font-semibold text-red-600 ring-2 ring-red-100 dark:bg-red-950/40 dark:text-red-400 dark:ring-red-900/50"
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
+    >
+      {name.trim().charAt(0).toUpperCase()}
+    </span>
   );
 }

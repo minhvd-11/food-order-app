@@ -1,18 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
-import {
-  BarChart2,
-  CalendarDays,
-  CalendarX2,
-  ChevronLeft,
-  ChevronRight,
-  CircleAlert,
-  Loader2,
-  Search,
-} from "lucide-react";
+import { format, startOfMonth } from "date-fns";
+import { BarChart2, CalendarX2, CircleAlert, Search } from "lucide-react";
 import { Button, Card, Input } from "@/components/ui";
+import { MonthStepper } from "@/components/MonthStepper";
 import {
   EmptyState,
   PageBackground,
@@ -34,7 +26,7 @@ type SummaryItem = {
 const normalize = (text: string) =>
   text
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/gi, "d")
     .toLowerCase();
 
@@ -49,7 +41,6 @@ export default function AdminManagePage() {
   const [query, setQuery] = useState("");
 
   const monthKey = format(month, "yyyy-MM");
-  const isCurrentMonth = isSameMonth(month, new Date());
   // the previous month stays on screen (dimmed) while the next one loads
   const loading = data?.month !== monthKey;
 
@@ -99,46 +90,11 @@ export default function AdminManagePage() {
         title="Thống kê đơn"
         description="Số suất và tiền cơm của từng người theo tháng"
       >
-        <div className="flex items-center gap-2">
-          {!isCurrentMonth && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => changeMonth(startOfMonth(new Date()))}
-            >
-              Tháng này
-            </Button>
-          )}
-          <div className="flex items-center rounded-lg border border-input bg-card p-1 shadow-xs">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8"
-              aria-label="Tháng trước"
-              onClick={() => changeMonth(addMonths(month, -1))}
-            >
-              <ChevronLeft />
-            </Button>
-            <span className="flex w-36 items-center justify-center gap-2 text-sm font-medium">
-              {loading && !error ? (
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              ) : (
-                <CalendarDays className="size-4 text-muted-foreground" />
-              )}
-              Tháng {format(month, "MM/yyyy")}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8"
-              aria-label="Tháng sau"
-              disabled={isCurrentMonth}
-              onClick={() => changeMonth(addMonths(month, 1))}
-            >
-              <ChevronRight />
-            </Button>
-          </div>
-        </div>
+        <MonthStepper
+          month={month}
+          onChange={changeMonth}
+          loading={loading && !error}
+        />
       </PageHeader>
 
       {error ? (

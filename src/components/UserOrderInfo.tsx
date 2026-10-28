@@ -1,112 +1,98 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
-import { FoodOrder, User } from "@/types";
+import { useEffect, useState } from "react";
+import { format, startOfMonth } from "date-fns";
+import { CalendarX2, CircleAlert } from "lucide-react";
+import { Button } from "@/components/ui";
+import { EmptyState, PageSkeleton } from "@/components/PageLayout";
+import { MonthStepper } from "@/components/MonthStepper";
+import {
+  DatedOrder,
+  DatedOrderList,
+  OrderSummary,
+} from "@/components/OrderList";
+import { cn, fetchJson } from "@/lib/utils";
 
+// One person's orders, a month at a time
 export default function UserOrderStats({ userId }: { userId: string }) {
-  const [orders, setOrders] = useState<FoodOrder[]>([]);
-  const [user, setUser] = useState<User>();
-  const [showCount, setShowCount] = useState(5);
-  const [loading, setLoading] = useState(false);
+  const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [data, setData] = useState<{
+    month: string;
+    orders: DatedOrder[];
+  } | null>(null);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const monthKey = format(month, "yyyy-MM");
+  // the previous month stays on screen (dimmed) while the next one loads
+  const loading = data?.month !== monthKey;
 
   useEffect(() => {
-    const loadProfile = async () => {
-      const res = await fetch("/api/users");
-      const users: User[] = await res.json();
-      const current = users.find((u) => u.id === userId);
-      if (current) {
-        setUser(current);
-      }
-    };
-    loadProfile();
-  }, [userId]);
+    const controller = new AbortController();
+    fetchJson<{ orders?: DatedOrder[] }>(
+      `/api/orders/manage-orders?userId=${encodeURIComponent(userId)}&month=${monthKey}`,
+      controller.signal,
+    )
+      .then((json) => setData({ month: monthKey, orders: json.orders ?? [] }))
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true);
+      });
+    return () => controller.abort();
+  }, [userId, monthKey, reloadKey]);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      const now = new Date();
-      const month = format(now, "yyyy-MM");
+  const changeMonth = (next: Date) => {
+    setMonth(next);
+    setError(false);
+  };
 
-      const res = await fetch(
-        `/api/orders/manage-orders?userId=${userId}&month=${month}`,
-      );
-      const data = await res.json();
-      setOrders(data.orders || []);
-      setLoading(false);
-    };
-
-    fetchOrders();
-  }, [userId]);
-
-  const orderedDays = orders.length;
-  const totalPrice = useMemo(() => {
-    return orders.reduce((sum, order) => sum + (order.price ?? 0), 0);
-  }, [orders]);
+  const retry = () => {
+    setError(false);
+    setReloadKey((key) => key + 1);
+  };
 
   return (
-    <div className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 shadow rounded-lg p-6 w-full max-w-2xl">
-      <h3 className="text-lg font-semibold mb-4">Thống kê</h3>
-
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Tên</p>
-          <p className="font-medium break-all">{user?.shortName}</p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Số lần đặt</p>
-          <p className="font-medium">{orderedDays} lần</p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Tổng tiền</p>
-          <p className="font-medium text-green-600 dark:text-green-400">
-            {totalPrice.toLocaleString()} đ
-          </p>
-        </div>
+    <section className="min-w-0">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">Lịch sử đặt cơm</h2>
+        <MonthStepper
+          month={month}
+          onChange={changeMonth}
+          loading={loading && !error}
+        />
       </div>
 
-      <h4 className="text-md font-semibold mb-2">Lịch sử đặt món</h4>
-
-      {loading ? (
-        <div className="flex justify-center items-center py-4">
-          <div className="w-5 h-5 border-2 border-gray-300 dark:border-neutral-700 border-t-blue-600 rounded-full animate-spin" />
-        </div>
-      ) : orders.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 italic">Không có dữ liệu</p>
+      {error ? (
+        <EmptyState
+          icon={CircleAlert}
+          title="Không tải được lịch sử"
+          description="Có lỗi khi tải dữ liệu, vui lòng thử lại."
+          action={
+            <Button variant="outline" className="border-input" onClick={retry}>
+              Thử lại
+            </Button>
+          }
+        />
+      ) : !data ? (
+        <PageSkeleton />
       ) : (
-        <>
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-gray-400">
-                <th className="py-2">Ngày</th>
-                <th className="py-2">Món đã chọn</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.slice(0, showCount).map((order, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-gray-200 dark:border-neutral-700 last:border-b-0"
-                >
-                  <td className="py-2">
-                    {format(new Date(order.date), "yyyy-MM-dd")}
-                  </td>
-                  <td className="py-2">{order.foodNames.join(", ")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {showCount < orders.length && (
-            <button
-              onClick={() => setShowCount((c) => c + 5)}
-              className="mt-4 text-blue-600 dark:text-blue-400 hover:underline text-sm"
-            >
-              Hiển thị thêm
-            </button>
+        <div
+          aria-busy={loading}
+          className={cn("space-y-6 transition-opacity", loading && "opacity-60")}
+        >
+          {data.orders.length === 0 ? (
+            <EmptyState
+              icon={CalendarX2}
+              title={`Bạn chưa đặt đơn nào trong tháng ${data.month.split("-").reverse().join("/")}`}
+              description="Chọn tháng khác để xem lại các đơn trước đây."
+            />
+          ) : (
+            <>
+              <OrderSummary orders={data.orders} />
+              <DatedOrderList orders={data.orders} />
+            </>
           )}
-        </>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
