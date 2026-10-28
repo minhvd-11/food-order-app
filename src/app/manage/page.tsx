@@ -1,7 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
+import {
+  BarChart2,
+  CalendarDays,
+  CalendarX2,
+  ChevronLeft,
+  ChevronRight,
+  CircleAlert,
+  Loader2,
+  Search,
+} from "lucide-react";
+import { Button, Card, Input } from "@/components/ui";
+import {
+  EmptyState,
+  PageBackground,
+  PageHeader,
+  PageSkeleton,
+  StatTile,
+} from "@/components/PageLayout";
+import { cn, fetchJson, formatVnd } from "@/lib/utils";
 
 type SummaryItem = {
   userId: string;
@@ -11,69 +30,254 @@ type SummaryItem = {
   money: number;
 };
 
-export default function AdminManagePage() {
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    format(new Date(), "yyyy-MM"),
-  );
-  const [summary, setSummary] = useState<SummaryItem[]>([]);
-  const [loading, setLoading] = useState(false);
+// Accent-insensitive search, so "dai" finds "Đại"
+const normalize = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase();
 
-  const fetchSummary = async (month: string) => {
-    setLoading(true);
-    const res = await fetch(`/api/orders/manage-orders?month=${month}`);
-    const data = await res.json();
-    setSummary(data.summary || []);
-    setLoading(false);
-  };
+export default function AdminManagePage() {
+  const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [data, setData] = useState<{
+    month: string;
+    summary: SummaryItem[];
+  } | null>(null);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [query, setQuery] = useState("");
+
+  const monthKey = format(month, "yyyy-MM");
+  const isCurrentMonth = isSameMonth(month, new Date());
+  // the previous month stays on screen (dimmed) while the next one loads
+  const loading = data?.month !== monthKey;
 
   useEffect(() => {
-    fetchSummary(selectedMonth);
-  }, [selectedMonth]);
+    const controller = new AbortController();
+    fetchJson<{ summary?: SummaryItem[] }>(
+      `/api/orders/manage-orders?month=${monthKey}`,
+      controller.signal,
+    )
+      .then((json) => setData({ month: monthKey, summary: json.summary ?? [] }))
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true);
+      });
+    return () => controller.abort();
+  }, [monthKey, reloadKey]);
+
+  const changeMonth = (next: Date) => {
+    setMonth(next);
+    setError(false);
+  };
+
+  const retry = () => {
+    setError(false);
+    setReloadKey((key) => key + 1);
+  };
+
+  const summary = data?.summary ?? [];
+  const totalMeals = summary.reduce((sum, row) => sum + row.count, 0);
+  const totalMoney = summary.reduce((sum, row) => sum + row.money, 0);
+  const maxCount = Math.max(1, ...summary.map((row) => row.count));
+  const search = normalize(query.trim());
+  const rows = summary
+    .map((row, index) => ({ ...row, rank: index + 1 }))
+    .filter(
+      (row) =>
+        !search ||
+        normalize(`${row.userName} ${row.userShortName}`).includes(search),
+    );
+  const dataMonthLabel = data?.month.split("-").reverse().join("/");
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">
-        📊 Thống kê đơn hàng theo tháng
-      </h1>
+    <main className="mx-auto max-w-4xl px-4 py-8">
+      <PageBackground />
 
-      <div className="mb-6">
-        <label className="font-medium">📅 Chọn tháng:</label>
-        <input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="ml-2 border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-2 rounded"
+      <PageHeader
+        icon={BarChart2}
+        title="Thống kê đơn"
+        description="Số suất và tiền cơm của từng người theo tháng"
+      >
+        <div className="flex items-center gap-2">
+          {!isCurrentMonth && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => changeMonth(startOfMonth(new Date()))}
+            >
+              Tháng này
+            </Button>
+          )}
+          <div className="flex items-center rounded-lg border border-input bg-card p-1 shadow-xs">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Tháng trước"
+              onClick={() => changeMonth(addMonths(month, -1))}
+            >
+              <ChevronLeft />
+            </Button>
+            <span className="flex w-36 items-center justify-center gap-2 text-sm font-medium">
+              {loading && !error ? (
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              ) : (
+                <CalendarDays className="size-4 text-muted-foreground" />
+              )}
+              Tháng {format(month, "MM/yyyy")}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label="Tháng sau"
+              disabled={isCurrentMonth}
+              onClick={() => changeMonth(addMonths(month, 1))}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        </div>
+      </PageHeader>
+
+      {error ? (
+        <EmptyState
+          icon={CircleAlert}
+          title="Không tải được thống kê"
+          description="Có lỗi khi tải dữ liệu, vui lòng thử lại."
+          action={
+            <Button variant="outline" className="border-input" onClick={retry}>
+              Thử lại
+            </Button>
+          }
         />
-      </div>
-
-      {loading ? (
-        <p>Đang tải...</p>
-      ) : summary.length === 0 ? (
-        <p>Không có dữ liệu trong tháng này.</p>
+      ) : !data ? (
+        <PageSkeleton />
       ) : (
-        <table className="w-full border-collapse border border-gray-300 dark:border-neutral-700">
-          <thead>
-            <tr className="bg-gray-100 dark:bg-neutral-800">
-              <th className="border border-gray-300 dark:border-neutral-700 p-2">Tên người dùng</th>
-              <th className="border border-gray-300 dark:border-neutral-700 p-2">Số lần đặt</th>
-              <th className="border border-gray-300 dark:border-neutral-700 p-2">Số tiền (VND)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summary.map((row) => (
-              <tr key={row.userId}>
-                <td className="border border-gray-300 dark:border-neutral-700 p-2">
-                  {row.userName} ({row.userShortName})
-                </td>
-                <td className="border border-gray-300 dark:border-neutral-700 p-2 text-center">{row.count}</td>
-                <td className="border border-gray-300 dark:border-neutral-700 p-2 text-right">
-                  {row.money.toLocaleString("vi-VN")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div
+          aria-busy={loading}
+          className={cn("space-y-6 transition-opacity", loading && "opacity-60")}
+        >
+          {summary.length === 0 ? (
+            <EmptyState
+              icon={CalendarX2}
+              title={`Chưa có đơn nào trong tháng ${dataMonthLabel}`}
+              description="Chọn tháng khác để xem thống kê."
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+                <StatTile label="Tổng suất" value={totalMeals} />
+                <StatTile label="Tổng tiền" value={formatVnd(totalMoney)} />
+                <StatTile
+                  className="col-span-2 sm:col-span-1"
+                  label="Số người đặt"
+                  value={summary.length}
+                  hint={`Trung bình ${(totalMeals / summary.length).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} suất/người`}
+                />
+              </div>
+
+              <Card className="gap-0 overflow-hidden border-red-100 py-0 dark:border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+                  <h2 className="font-semibold">Chi tiết theo người</h2>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Tìm theo tên..."
+                      aria-label="Tìm theo tên"
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+
+                <table className="w-full text-sm">
+                  <caption className="sr-only">
+                    Thống kê tháng {dataMonthLabel}
+                  </caption>
+                  <thead className="bg-muted/50 text-xs text-muted-foreground">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="hidden w-12 py-2.5 pl-4 text-left font-medium sm:table-cell"
+                      >
+                        #
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-2.5 text-left font-medium sm:px-2"
+                      >
+                        Thành viên
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-2 py-2.5 text-right font-medium sm:w-2/5 sm:text-left"
+                      >
+                        Số suất
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-2.5 text-right font-medium"
+                      >
+                        Thành tiền
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {rows.map((row) => (
+                      <tr
+                        key={row.userId}
+                        className="transition-colors hover:bg-muted/40"
+                      >
+                        <td className="hidden py-3 pl-4 text-muted-foreground tabular-nums sm:table-cell">
+                          {row.rank}
+                        </td>
+                        <td className="px-4 py-3 sm:px-2">
+                          <span className="font-medium">{row.userName}</span>
+                          {row.userShortName !== row.userName && (
+                            <span className="ml-1.5 text-xs text-muted-foreground">
+                              {row.userShortName}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-3">
+                          <div className="flex items-center justify-end gap-2 sm:justify-start">
+                            <div
+                              className="hidden h-2 shrink-0 rounded-r-[4px] bg-primary sm:block"
+                              style={{
+                                width: `calc((100% - 2.5rem) * ${row.count / maxCount})`,
+                              }}
+                            />
+                            <span className="font-medium tabular-nums">
+                              {row.count}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium tabular-nums">
+                          {formatVnd(row.money)}
+                        </td>
+                      </tr>
+                    ))}
+                    {rows.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-4 py-10 text-center text-muted-foreground"
+                        >
+                          Không tìm thấy ai khớp với “{query.trim()}”
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </Card>
+            </>
+          )}
+        </div>
       )}
-    </div>
+    </main>
   );
 }

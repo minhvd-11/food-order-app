@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { startOfDay } from "date-fns";
+import { orderDay } from "@/lib/orderDate";
 
 export async function GET(req: NextRequest) {
   const groupBy = req.nextUrl.searchParams.get("groupBy") ?? "day";
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ groupBy: "user", data: grouped });
   } else {
-    const date = startOfDay(new Date(value));
+    const date = orderDay(value);
     const orders = await prisma.order.findMany({
       where: { date },
       include: {

@@ -16,8 +16,14 @@ export async function login(formData: FormData) {
 
   const { error } = await supabase.auth.signInWithPassword(data);
 
+  // return the error so the login page can show it inline
   if (error) {
-    redirect("/error");
+    return {
+      error:
+        error.code === "invalid_credentials"
+          ? "Email hoặc mật khẩu không đúng."
+          : "Đăng nhập không thành công, vui lòng thử lại.",
+    };
   }
 
   revalidatePath("/", "layout");

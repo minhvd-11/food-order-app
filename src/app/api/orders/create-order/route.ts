@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { startOfDay } from "date-fns";
+import { orderDay } from "@/lib/orderDate";
 import { notifyOrderCreated } from "@/lib/chatNotifications";
 
 type OrderRequest = {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const today = startOfDay(new Date());
+  const today = orderDay();
 
   let user = await prisma.user.findFirst({ where: { name } });
 
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 
   await notifyOrderCreated({
     user,
-    dateText: today.toLocaleDateString("vi-VN"),
+    dateText: today.toLocaleDateString("vi-VN", { timeZone: "UTC" }),
     orderNumber,
     foods: order.items.map((item) => item.food.name),
     note,

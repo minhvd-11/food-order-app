@@ -9,3 +9,4 @@ export * from "@/components/OrderSelection";
 export * from "@/components/FoodWheelModal";
 export * from "@/components/GradientText";
 export * from "@/components/LunarNewYearLanding";
+export * from "@/components/PageLayout";

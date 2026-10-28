@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { startOfDay } from "date-fns";
+import { orderDay, orderMonthRange } from "@/lib/orderDate";
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl;
@@ -11,9 +11,7 @@ export async function GET(req: NextRequest) {
 
   // ===== CASE 3: Monthly summary grouped by user =====
   if (monthParam && !userId) {
-    const [year, month] = monthParam.split("-").map(Number);
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 0, 23, 59, 59);
+    const { start, end } = orderMonthRange(monthParam);
 
     const grouped = await prisma.order.groupBy({
       by: ["userId"],
@@ -48,9 +46,7 @@ export async function GET(req: NextRequest) {
 
   // ===== CASE 2: Monthly orders for a single user =====
   if (monthParam && userId) {
-    const [year, month] = monthParam.split("-").map(Number);
-    const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 0, 23, 59, 59);
+    const { start, end } = orderMonthRange(monthParam);
 
     const orders = await prisma.order.findMany({
       where: { userId, date: { gte: start, lte: end } },
@@ -76,8 +72,7 @@ export async function GET(req: NextRequest) {
   // ===== CASE 1: Daily orders =====
   const where: Prisma.OrderWhereInput = {};
   if (dateParam) {
-    const date = startOfDay(new Date(dateParam));
-    where.date = date;
+    where.date = orderDay(dateParam);
   }
   if (userId) {
     where.userId = userId;
@@ -131,7 +126,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const orderDate = startOfDay(new Date(date));
+  const orderDate = orderDay(date);
 
   // Remove existing order (if any) for that date
   await prisma.order.deleteMany({
