@@ -53,6 +53,15 @@ model OrderItem {
   order   Order  @relation(fields: [orderId], references: [id])
 }
 
+/// A day whose lunch orders are closed ("chốt đơn"). A row existing for
+/// `date` (midnight UTC, the same key as Order.date) blocks new orders.
+model OrderLock {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  lockedBy  String?
+  createdAt DateTime @default(now())
+}
+
 /// A Google Chat user who has subscribed to the lunch bot's daily DM.
 /// `spaceName` is the 1:1 DM space between that user and this Chat app,
 /// captured when they add/message the bot.

@@ -7,7 +7,7 @@ import { Button, Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { Food, OrderPrice, OrderPriceTierType, User } from "@/types";
 import { useUser } from "@/contexts/UserContext";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 const priceOptions: OrderPrice[] = [
@@ -58,20 +58,24 @@ export const OrderSelection = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showWheel, setShowWheel] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   const isNoToppingOrder = orderPrice === 10000;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [foodsRes, usersRes] = await Promise.all([
+        const [foodsRes, usersRes, lockRes] = await Promise.all([
           fetch("/api/foods/today"),
           fetch("/api/users"),
+          fetch("/api/orders/lock"),
         ]);
         const foodsData = await foodsRes.json();
         const usersData = await usersRes.json();
+        const lockData = await lockRes.json();
         setFoods(foodsData);
         setUsers(usersData);
+        setLocked(!!lockData?.locked);
       } catch (err) {
         console.error(err);
         setFoods([]);
@@ -97,9 +101,32 @@ export const OrderSelection = () => {
   return (
     // <main className="p-6 space-y-6">
     <section className="max-w-4xl mx-auto p-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md rounded-2xl shadow-xl border border-red-100 dark:border-neutral-800 relative z-10 my-8">
+      {/* Locked banner */}
+      {locked && (
+        <div className="mb-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 flex items-center gap-3">
+          <Lock
+            className="text-amber-600 dark:text-amber-400 shrink-0"
+            size={20}
+          />
+          <div>
+            <p className="font-semibold text-amber-800 dark:text-amber-300">
+              Hôm nay đã chốt đơn!
+            </p>
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              Không thể chọn món hay đặt thêm đơn mới.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Name & Shortname Inputs */}
       <div className="flex justify-between gap-4 items-end mb-4 flex-wrap">
-        <div className="flex-1 min-w-[200px]">
+        <div
+          className={cn(
+            "flex-1 min-w-[200px]",
+            locked && "pointer-events-none opacity-50",
+          )}
+        >
           <label className="block text-sm font-medium mb-1">
             🧑 Tên của bạn (chọn từ danh sách):
           </label>
@@ -132,7 +159,12 @@ export const OrderSelection = () => {
           </div>
         </div>
 
-        <div className="flex-1 min-w-[200px]">
+        <div
+          className={cn(
+            "flex-1 min-w-[200px]",
+            locked && "pointer-events-none opacity-50",
+          )}
+        >
           <label className="block text-sm font-medium mb-1">
             ✏️ Hoặc nhập tên mới:
           </label>
@@ -151,9 +183,20 @@ export const OrderSelection = () => {
         <SketchyButton onClick={() => setShowModal(true)}>
           Xem đơn
         </SketchyButton>
-        {showModal && <TodayOrderModal onClose={() => setShowModal(false)} />}
+        {showModal && (
+          <TodayOrderModal
+            onClose={() => setShowModal(false)}
+            locked={locked}
+            onLockedChange={setLocked}
+          />
+        )}
       </div>
 
+      {/* Everything below is ordering UI, dimmed and inert once orders are locked */}
+      <div
+        className={cn(locked && "pointer-events-none opacity-50 select-none")}
+        aria-disabled={locked}
+      >
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
         {priceOptions.map((option) => {
           const isSelected = option.value === orderPrice;
@@ -203,17 +246,6 @@ export const OrderSelection = () => {
           </SketchyButton>
         )}
       </div>
-
-      <FoodWheelModal
-        open={showWheel}
-        foods={foods}
-        onClose={() => setShowWheel(false)}
-        onConfirm={(picked) => {
-          addItems(picked);
-          setShowWheel(false);
-          toast.success(`🎉 Đã thêm ${picked.length} món từ vòng quay!`);
-        }}
-      />
 
       {/* Food Cards */}
       {loading ? (
@@ -304,11 +336,23 @@ export const OrderSelection = () => {
           <h2 className="text-lg font-semibold mb-2">
             Đơn giá: {orderPrice?.toLocaleString()} đ
           </h2>
-          <SketchyButton onClick={submitOrder} disabled={submitLoading}>
+          <SketchyButton onClick={submitOrder} disabled={submitLoading || locked}>
             {submitLoading ? "Đang lưu..." : "Lưu đơn"}
           </SketchyButton>
         </div>
       )}
+      </div>
+
+      <FoodWheelModal
+        open={showWheel && !locked}
+        foods={foods}
+        onClose={() => setShowWheel(false)}
+        onConfirm={(picked) => {
+          addItems(picked);
+          setShowWheel(false);
+          toast.success(`🎉 Đã thêm ${picked.length} món từ vòng quay!`);
+        }}
+      />
     </section>
     // </main>
   );

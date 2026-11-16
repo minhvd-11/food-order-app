@@ -31,6 +31,14 @@ export async function POST(req: Request) {
 
   const today = orderDay();
 
+  const lock = await prisma.orderLock.findUnique({ where: { date: today } });
+  if (lock) {
+    return NextResponse.json(
+      { message: "Hôm nay đã chốt đơn, không thể đặt thêm" },
+      { status: 423 }
+    );
+  }
+
   let user = await prisma.user.findFirst({ where: { name } });
 
   if (!user && shortName) {
