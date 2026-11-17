@@ -1,7 +1,4 @@
-// lib/chatNotifications.ts
-//
-// Per-user Chat DMs triggered by app events (as opposed to the daily
-// announcement, which fans out to every subscriber).
+// Per-user Chat DMs triggered by app events (vs. the daily announcement to all subscribers).
 import { prisma } from "@/lib/prisma";
 import {
   buildOrderConfirmationCard,
@@ -11,10 +8,8 @@ import {
 } from "@/lib/googleChat";
 
 /**
- * Links an app user to their Chat subscription. Users are matched by email,
- * but `User.email` is null for people who were created from an order form
- * rather than a login, so fall back to the email's local part — shortNames
- * mirror it (`huy.nv` <-> `huy.nv@teko.vn`).
+ * Links an app user to their Chat subscription by email, falling back to the email's local
+ * part since `User.email` can be null and shortNames mirror it (`huy.nv` <-> `huy.nv@teko.vn`).
  */
 export async function findSubscriberForUser(user: {
   email?: string | null;

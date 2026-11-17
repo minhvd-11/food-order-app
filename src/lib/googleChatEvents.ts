@@ -1,19 +1,11 @@
-// lib/googleChatEvents.ts
-//
-// Inbound side of the Chat app: proves a request really came from Google Chat,
-// and flattens the two payload shapes Chat can send (the classic HTTP Chat app
-// format and the newer Workspace add-on format) into one small event type.
+// Inbound Google Chat requests: verifies they really come from Google Chat and
+// flattens the classic and Workspace add-on payloads into one event type.
 import crypto from "node:crypto";
 
 const CHAT_ISSUER = "chat@system.gserviceaccount.com";
 
-// Chat signs the bearer token differently depending on the "Authentication
-// Audience" chosen in the Chat API configuration:
-//   Project Number    -> a JWT self-signed by chat@system.gserviceaccount.com,
-//                        audience = the Cloud project number.
-//   HTTP endpoint URL -> a Google-signed OIDC ID token, audience = this
-//                        endpoint's URL, with chat@system as the email claim.
-// Both are accepted so either setting works.
+// Both "Authentication Audience" settings are accepted: Project Number (JWT self-signed by
+// chat@system, aud = project number) and HTTP endpoint URL (Google OIDC token, aud = URL).
 const CHAT_CERTS_URL = `https://www.googleapis.com/service_accounts/v1/metadata/x509/${CHAT_ISSUER}`;
 const GOOGLE_OIDC_CERTS_URL = "https://www.googleapis.com/oauth2/v1/certs";
 const GOOGLE_OIDC_ISSUERS = new Set([
@@ -22,12 +14,8 @@ const GOOGLE_OIDC_ISSUERS = new Set([
 ]);
 
 /**
- * Who Google may sign an OIDC request as. A classic Chat app is sent as
- * chat@system (Google-owned, always allowed). A Chat app built as a Workspace
- * add-on is sent as that project's add-ons service agent, which is
- * project-specific and therefore must be pinned to our own project number —
- * accepting the whole gcp-sa-gsuiteaddons domain would let any Google Cloud
- * project drive this endpoint.
+ * Allowed OIDC signers: chat@system (classic app) or our own project's add-ons service agent
+ * (Workspace add-on) — pinned to our project number so other Cloud projects can't call us.
  */
 function allowedIssuerEmails(): Set<string> {
   const allowed = new Set([CHAT_ISSUER]);
@@ -75,9 +63,8 @@ type TokenClaims = {
 };
 
 /**
- * Decides which cert set and audience to check this token against, based on
- * who issued it. Returns null for anything not issued by Google Chat, or when
- * the matching env var isn't configured.
+ * Picks the cert set and audience by token issuer. Returns null if the token isn't from
+ * Google Chat or the matching env var isn't configured.
  */
 function strategyFor(
   claims: TokenClaims,
@@ -127,10 +114,8 @@ function strategyFor(
 }
 
 /**
- * Verifies the bearer token Chat puts on every request. Fails closed — with
- * neither GOOGLE_CHAT_PROJECT_NUMBER nor GOOGLE_CHAT_ENDPOINT_URL set, the
- * endpoint accepts nothing, so an unconfigured deploy can't be driven by
- * strangers.
+ * Verifies Chat's bearer token. Fails closed: with neither GOOGLE_CHAT_PROJECT_NUMBER
+ * nor GOOGLE_CHAT_ENDPOINT_URL set, every request is rejected.
  */
 export async function verifyChatRequest(req: Request): Promise<boolean> {
   const authorization = req.headers.get("authorization") ?? "";

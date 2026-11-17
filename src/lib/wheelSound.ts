@@ -1,11 +1,8 @@
 "use client";
 
 /**
- * Sound effects for the food wheel.
- *
- * Everything is synthesised with the Web Audio API on the fly, so the feature
- * ships without any audio asset. Browsers only allow audio after a user
- * gesture, hence `unlockAudio()` which must run inside the click handler.
+ * Food wheel sound effects, synthesised with Web Audio (no audio assets).
+ * Browsers need a user gesture first, so call `unlockAudio()` in the click handler.
  */
 
 type WindowWithWebkitAudio = Window & {
@@ -65,9 +62,8 @@ export function playTick(intensity = 1) {
 }
 
 /**
- * The bed that plays underneath the whole spin: a filtered saw with a slow
- * wobble that opens up as the reel flies and closes as it settles.
- * Returns a stopper that fades it out.
+ * Background bed for the whole spin: a filtered, wobbling saw that opens as the reel
+ * flies and closes as it settles. Returns a stopper that fades it out.
  */
 export function startSpinBed(durationMs = 5000): () => void {
   const ctx = getCtx();

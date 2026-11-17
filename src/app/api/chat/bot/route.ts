@@ -1,7 +1,5 @@
-// app/api/chat/bot/route.ts
-//
-// HTTP endpoint for the Google Chat app. Configure this URL under
-// Google Cloud Console > Google Chat API > Configuration > Connection settings.
+// HTTP endpoint for the Google Chat app; set this URL in Google Cloud Console >
+// Google Chat API > Configuration > Connection settings.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { findDirectMessageSpace } from "@/lib/googleChat";
@@ -70,9 +68,8 @@ function parseCommand(text: string): Command {
 }
 
 /**
- * The DM space to send this person's announcements to. When they talk to the
- * bot inside a shared space we look up their 1:1 space instead, so we never
- * store a room and accidentally broadcast.
+ * The person's DM space for announcements. From a shared space we look up their 1:1 space
+ * instead, so a room is never stored and broadcast to.
  */
 async function resolveDmSpace(event: ChatEvent): Promise<string | null> {
   if (isDirectMessage(event) && event.space.name) return event.space.name;
@@ -197,9 +194,8 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Health check for setup. Google Chat only ever POSTs here, so GET is free to
- * report how this deployment is wired up. Everything below is non-secret: the
- * public endpoint URL plus whether each variable is present.
+ * Setup health check. Chat only POSTs here, so GET reports the (non-secret) endpoint URL
+ * and which env vars are present.
  */
 export async function GET() {
   const { mode, expectedAudience, acceptedSenders } = chatVerificationConfig();

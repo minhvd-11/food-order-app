@@ -1,8 +1,5 @@
-// lib/googleChat.ts
-//
-// Outbound Google Chat API calls, authenticated as the Chat app itself
-// (service account, `chat.bot` scope). Incoming webhooks can only post to a
-// space — DMing a person requires the Chat API, which is what this file wraps.
+// Outbound Google Chat API calls as the Chat app (service account, `chat.bot` scope),
+// needed because incoming webhooks can't DM a person.
 import crypto from "node:crypto";
 
 const CHAT_API_BASE = "https://chat.googleapis.com/v1";
@@ -18,11 +15,7 @@ type ServiceAccount = {
 
 let serviceAccount: ServiceAccount | null | undefined;
 
-/**
- * Reads GOOGLE_CHAT_SERVICE_ACCOUNT, which may hold either the raw service
- * account JSON or a base64 copy of it (easier to paste into Vercel, which
- * mangles multi-line values).
- */
+/** Reads GOOGLE_CHAT_SERVICE_ACCOUNT as raw JSON or base64 (Vercel mangles multi-line values). */
 function loadServiceAccount(): ServiceAccount | null {
   if (serviceAccount !== undefined) return serviceAccount;
 
@@ -169,9 +162,8 @@ export async function sendChatMessage(
 }
 
 /**
- * Resolves the 1:1 DM space between this app and a user. Only succeeds once
- * the user has added the app, so it is a repair path for a stale stored space
- * rather than a way to cold-DM someone.
+ * Resolves the 1:1 DM space with a user. Only works once they've added the app, so it
+ * repairs a stale stored space rather than cold-DMing someone.
  */
 export async function findDirectMessageSpace(
   chatUserId: string,

@@ -20,9 +20,8 @@ import { Food } from "@/types";
 const ROW_HEIGHT = 64;
 const SPIN_MS = 5000;
 /**
- * Rows the reel aims to travel, whatever the pool size. Keeping the distance
- * (and therefore the peak speed) constant means a 25-dish list blurs instead
- * of strobing, and a 3-dish list still gets a proper long spin.
+ * Rows the reel travels regardless of pool size, so big lists blur instead of strobing
+ * and small ones still get a long spin.
  */
 const TARGET_ROWS = 46;
 /** Always show every option go past at least once. */

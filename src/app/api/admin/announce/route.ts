@@ -62,9 +62,8 @@ async function deliverToSubscriber(
 }
 
 /**
- * Fans the daily card out to everyone subscribed to the bot. Returns null when
- * nobody is subscribed, so an empty list is never counted as a delivery that
- * could mask a failure on another channel.
+ * Sends the daily card to every bot subscriber. Returns null when nobody is subscribed,
+ * so an empty list never counts as a delivery that masks another channel's failure.
  */
 async function announceToSubscribers(
   card: Record<string, unknown>,

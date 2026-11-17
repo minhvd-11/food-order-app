@@ -113,7 +113,7 @@ export const OrderSelection = () => {
               Hôm nay đã chốt đơn!
             </p>
             <p className="text-sm text-amber-700 dark:text-amber-400">
-              Không thể chọn món hay đặt thêm đơn mới.
+              Không thể chọn món hay đặt thêm đơn mới. Vui lòng liên hệ minh.vd hoặc kênh Daily Lunch để mở đặt đơn
             </p>
           </div>
         </div>
