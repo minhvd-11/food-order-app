@@ -99,7 +99,6 @@ export const OrderSelection = () => {
   }, [userMetadata?.email, users, guestName, setGuestName, setShortName]);
 
   return (
-    // <main className="p-6 space-y-6">
     <section className="max-w-4xl mx-auto p-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md rounded-2xl shadow-xl border border-red-100 dark:border-neutral-800 relative z-10 my-8">
       {/* Locked banner */}
       {locked && (
@@ -354,6 +353,5 @@ export const OrderSelection = () => {
         }}
       />
     </section>
-    // </main>
   );
 };

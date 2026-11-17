@@ -12,7 +12,6 @@ import {
 export const runtime = "nodejs";
 
 const GOOGLE_CHAT_WEBHOOK = process.env.GOOGLE_CHAT_WEBHOOK;
-const SLACK_WORKFLOW_WEBHOOK = process.env.SLACK_WORKFLOW_WEBHOOK;
 
 type AnnounceResult = {
   platform: string;
@@ -104,9 +103,9 @@ async function announceToSubscribers(
 export async function POST(req: NextRequest) {
   const chatBotConfigured = isChatBotConfigured();
 
-  if (!GOOGLE_CHAT_WEBHOOK && !SLACK_WORKFLOW_WEBHOOK && !chatBotConfigured) {
+  if (!GOOGLE_CHAT_WEBHOOK && !chatBotConfigured) {
     console.error(
-      "Missing GOOGLE_CHAT_WEBHOOK, SLACK_WORKFLOW_WEBHOOK and GOOGLE_CHAT_SERVICE_ACCOUNT env vars",
+      "Missing GOOGLE_CHAT_WEBHOOK and GOOGLE_CHAT_SERVICE_ACCOUNT env vars",
     );
     return NextResponse.json(
       { error: "Server not configured" },
@@ -179,46 +178,6 @@ export async function POST(req: NextRequest) {
         });
       }
     }
-
-    // --- Slack ---
-    // if (SLACK_WORKFLOW_WEBHOOK) {
-    //   const foodsText = foods.length ? `• ${foods.join("\n• ")}` : "";
-
-    //   const slackPayload = {
-    //     date: dateText,
-    //     message: `Mọi người vào đặt cơm, ${time} em chốt ạ`,
-    //     url: SITE_URL,
-    //     foods: foodsText,
-    //   };
-
-    //   try {
-    //     const res = await fetch(SLACK_WORKFLOW_WEBHOOK, {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(slackPayload),
-    //     });
-
-    //     if (!res.ok) {
-    //       const text = await res.text().catch(() => "");
-    //       console.error(
-    //         "Slack workflow webhook returned error:",
-    //         res.status,
-    //         text,
-    //       );
-    //       results.push({ platform: "slack", success: false, error: text });
-    //     } else {
-    //       console.log("Slack announce sent successfully");
-    //       results.push({ platform: "slack", success: true });
-    //     }
-    //   } catch (err: any) {
-    //     console.error("Slack webhook fetch failed:", err);
-    //     results.push({
-    //       platform: "slack",
-    //       success: false,
-    //       error: err.message,
-    //     });
-    //   }
-    // }
 
     const allFailed = results.length > 0 && results.every((r) => !r.success);
 

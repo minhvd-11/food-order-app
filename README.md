@@ -1,6 +1,6 @@
 # 🍱 Daily Lunch
 
-Daily Lunch is Teko's internal web app for organizing the office's daily lunch order. Every day, an admin publishes the menu (parsed from a pasted text list via Gemini AI), teammates pick their food and price tier before the cutoff time, and admins can look up, edit, and get monthly spending stats per person — with an automatic announcement posted to Google Chat / Slack once the menu is confirmed.
+Daily Lunch is Teko's internal web app for organizing the office's daily lunch order. Every day, an admin publishes the menu (parsed from a pasted text list via Gemini AI), teammates pick their food and price tier before the cutoff time, and admins can look up, edit, and get monthly spending stats per person — with an automatic announcement posted to Google Chat once the menu is confirmed.
 
 ## Features
 
@@ -8,7 +8,7 @@ Daily Lunch is Teko's internal web app for organizing the office's daily lunch o
 - **Ordering** — On the home page, employees pick their name (or type a new one), choose a price tier (Thuần Cơm / Cơ bản / Hơi no / Ngập mồm), select dishes, add optional notes, and submit their order for the day.
 - **Order lookup & history** — `/orders` lets anyone browse past orders grouped by day or by person. A "today's orders" modal shows/edits/removes orders in real time and can copy the day's order list to the clipboard.
 - **Admin stats** — `/manage` aggregates each person's order count and total spend for a selected month.
-- **Announcements** — After saving a menu, admins trigger an announcement of the menu and ordering cutoff. It goes to the Google Chat space via an incoming webhook **and**, separately, as a 1:1 DM to everyone subscribed to the lunch Chat bot (see [Google Chat lunch bot](#google-chat-lunch-bot-per-user-dms)). A Slack workflow variant is available too.
+- **Announcements** — After saving a menu, admins trigger an announcement of the menu and ordering cutoff. It goes to the Google Chat space via an incoming webhook **and**, separately, as a 1:1 DM to everyone subscribed to the lunch Chat bot (see [Google Chat lunch bot](#google-chat-lunch-bot-per-user-dms)).
 - **Order confirmation DM** — When someone submits an order, the Chat bot DMs them a confirmation card led by the order's number for the day (which people read out to collect their food, so it appears in the card header, as a highlighted row, and in the plain-text fallback), followed by the dishes they picked, their note, and the price tier. Only for people subscribed to the bot; the order is saved regardless of whether the DM succeeds.
 - **Auth & profile** — Email/password and Google OAuth login via Supabase, with a profile page to view your personal order history and edit your display name/avatar.
 - **Light/Dark theme** — Full light/dark mode support (via `next-themes`) with a toggle switch in the navbar, respecting the system preference by default.
@@ -23,7 +23,7 @@ Daily Lunch is Teko's internal web app for organizing the office's daily lunch o
 - **Database:** PostgreSQL via [Prisma ORM](https://www.prisma.io)
 - **Auth:** [Supabase](https://supabase.com) (email/password + Google OAuth, SSR-aware middleware session refresh)
 - **AI:** Google Gemini (`@google/generative-ai`) for parsing free-text menus into structured food lists
-- **Notifications:** Google Chat incoming webhook (space) + a Google Chat app/bot sending per-user DMs via the Chat API; optional Slack workflow webhook
+- **Notifications:** Google Chat incoming webhook (space) + a Google Chat app/bot sending per-user DMs via the Chat API
 - **Misc:** `sonner` (toasts), `framer-motion`/`motion` (animations), `date-fns`
 
 ## Data Model
@@ -91,7 +91,6 @@ Create a `.env` (database) and `.env.local` (app secrets) with:
 | `GOOGLE_CHAT_PROJECT_NUMBER` | Cloud project number. Required if the app is a Chat **add-on** (it identifies the add-ons service agent that signs requests), and also serves as the audience if Authentication Audience is **Project Number** |
 | `GOOGLE_CHAT_SERVICE_AGENT_EMAIL` | (optional) Explicit sender address to trust, instead of deriving it from the project number |
 | `GOOGLE_CHAT_ENDPOINT_URL` | Set if the Authentication Audience is **HTTP endpoint URL** (recommended); must match the configured URL exactly |
-| `SLACK_WORKFLOW_WEBHOOK` | (optional) Slack workflow webhook for announcements |
 
 Each announcement channel is independent: set only `GOOGLE_CHAT_WEBHOOK` and you get the space post, set only the two `GOOGLE_CHAT_*` bot vars and you get DMs, set all three and you get both.
 
